@@ -10,7 +10,7 @@ class PrimaryBtn extends StatelessWidget {
   const PrimaryBtn({
     super.key,
     required this.label,
-    this.height = 32,
+    this.height = 44,
     this.onPressed,
   });
 

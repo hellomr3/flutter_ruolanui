@@ -10,7 +10,7 @@ class ErrorBtn extends StatelessWidget {
   const ErrorBtn({
     super.key,
     required this.label,
-    this.height = 32,
+    this.height = 44,
     this.onPressed,
   });
 

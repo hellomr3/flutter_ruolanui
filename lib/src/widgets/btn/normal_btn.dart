@@ -10,7 +10,7 @@ class NormalBtn extends StatelessWidget {
   const NormalBtn({
     super.key,
     required this.label,
-    this.height = 32,
+    this.height = 44,
     this.onPressed,
   });
 
