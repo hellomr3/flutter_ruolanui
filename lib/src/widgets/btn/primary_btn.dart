@@ -7,11 +7,14 @@ class PrimaryBtn extends StatelessWidget {
 
   final VoidCallback? onPressed;
 
+  final EdgeInsets edgeInsets;
+
   const PrimaryBtn({
     super.key,
     required this.label,
-    this.height = 44,
+    this.height = 36,
     this.onPressed,
+    this.edgeInsets = const EdgeInsets.symmetric(horizontal: 12),
   });
 
   @override
@@ -28,9 +31,13 @@ class PrimaryBtn extends StatelessWidget {
         onPressed: () {
           onPressed?.call();
         },
-        child: Text(
-          label,
-          style: textTheme.titleMedium!.copyWith(color: colorScheme.onPrimary),
+        child: Padding(
+          padding: edgeInsets,
+          child: Text(
+            label,
+            style:
+                textTheme.titleMedium!.copyWith(color: colorScheme.onPrimary),
+          ),
         ),
       ),
     );

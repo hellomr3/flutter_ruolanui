@@ -6,7 +6,7 @@ class Result<T> {
 
   Result._({this.data, this.msg, required this.code});
 
-  factory Result.success(T data) => Result._(data: data, code: 0);
+  factory Result.success(T? data) => Result._(data: data, code: 0);
 
   factory Result.failure(String? error, {int? code = -1}) =>
       Result._(msg: error, code: code ?? -1);
