@@ -3,6 +3,7 @@ export 'src/core/result.dart';
 // dialog
 export 'src/dialog/input_dialog/input_utils.dart';
 export 'src/dialog/confirm/confirm_dialog.dart';
+export 'src/dialog/options/options_dialog.dart';
 
 // widgets
 export 'src/widgets/textfield/app_textfield.dart';

@@ -6,18 +6,18 @@ class ConditionalBuilder extends StatelessWidget {
   final WidgetBuilder? falseBuilder;
 
   const ConditionalBuilder({
-    Key? key,
+    super.key,
     required this.condition,
     required this.trueBuilder,
     this.falseBuilder,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return condition
         ? trueBuilder(context)
         : falseBuilder != null
-        ? falseBuilder!(context)
-        : SizedBox.shrink();
+            ? falseBuilder!(context)
+            : SizedBox.shrink();
   }
 }
