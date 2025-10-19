@@ -19,6 +19,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
     TextTheme textTheme = Theme.of(context).textTheme;
     ColorScheme colorScheme = Theme.of(context).colorScheme;
     return AppBar(
+      iconTheme: null,
       title: title != null
           ? Text(title ?? "", style: textTheme.titleMedium)
           : null,

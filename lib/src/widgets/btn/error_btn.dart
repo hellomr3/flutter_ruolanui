@@ -5,12 +5,15 @@ class ErrorBtn extends StatelessWidget {
 
   final double height;
 
+  final double borderRadius;
+
   final VoidCallback? onPressed;
 
   const ErrorBtn({
     super.key,
     required this.label,
     this.height = 44,
+    this.borderRadius = 22,
     this.onPressed,
   });
 
@@ -24,6 +27,9 @@ class ErrorBtn extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: colorScheme.error,
           padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius), // 设置圆角半径
+          ),
         ),
         onPressed: () {
           onPressed?.call();

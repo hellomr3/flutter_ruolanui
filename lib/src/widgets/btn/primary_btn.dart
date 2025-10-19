@@ -5,6 +5,8 @@ class PrimaryBtn extends StatelessWidget {
 
   final double height;
 
+  final double borderRadius;
+
   final VoidCallback? onPressed;
 
   final EdgeInsets edgeInsets;
@@ -12,7 +14,8 @@ class PrimaryBtn extends StatelessWidget {
   const PrimaryBtn({
     super.key,
     required this.label,
-    this.height = 36,
+    this.height = 44,
+    this.borderRadius = 22,
     this.onPressed,
     this.edgeInsets = const EdgeInsets.symmetric(horizontal: 12),
   });
@@ -27,6 +30,9 @@ class PrimaryBtn extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: colorScheme.primary,
           padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(borderRadius), // 设置圆角半径
+          ),
         ),
         onPressed: () {
           onPressed?.call();
