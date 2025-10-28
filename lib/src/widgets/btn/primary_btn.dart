@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'base_btn.dart';
 
 class PrimaryBtn extends StatelessWidget {
   final String label;
-
   final double height;
-
+  final double? width;
   final double borderRadius;
-
   final VoidCallback? onPressed;
-
   final EdgeInsets edgeInsets;
 
   const PrimaryBtn({
     super.key,
     required this.label,
     this.height = 44,
+    this.width,
     this.borderRadius = 22,
     this.onPressed,
     this.edgeInsets = const EdgeInsets.symmetric(horizontal: 12),
@@ -24,28 +23,16 @@ class PrimaryBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    return SizedBox(
+    return BaseBtn(
+      label: label,
       height: height,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: colorScheme.primary,
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(borderRadius), // 设置圆角半径
-          ),
-        ),
-        onPressed: () {
-          onPressed?.call();
-        },
-        child: Padding(
-          padding: edgeInsets,
-          child: Text(
-            label,
-            style:
-                textTheme.titleMedium!.copyWith(color: colorScheme.onPrimary),
-          ),
-        ),
-      ),
+      width: width,
+      borderRadius: borderRadius,
+      onPressed: onPressed,
+      edgeInsets: edgeInsets,
+      backgroundColor: colorScheme.primary,
+      textColor: colorScheme.onPrimary,
+      textStyle: textTheme.titleMedium,
     );
   }
 }

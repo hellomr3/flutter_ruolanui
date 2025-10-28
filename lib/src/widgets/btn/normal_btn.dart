@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'base_btn.dart';
 
 class NormalBtn extends StatelessWidget {
   final String label;
-
   final double height;
-
   final double borderRadius;
-
   final VoidCallback? onPressed;
 
   const NormalBtn({
@@ -21,24 +19,15 @@ class NormalBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    return SizedBox(
+    return BaseBtn(
+      label: label,
       height: height,
-      child: FilledButton(
-        style: FilledButton.styleFrom(
-          backgroundColor: colorScheme.surfaceContainer,
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(borderRadius), // 设置圆角半径
-          ),
-        ),
-        onPressed: () {
-          onPressed?.call();
-        },
-        child: Text(
-          label,
-          style: textTheme.bodyMedium!.copyWith(color: colorScheme.onSurface),
-        ),
-      ),
+      borderRadius: borderRadius,
+      onPressed: onPressed,
+      edgeInsets: EdgeInsets.zero,
+      backgroundColor: colorScheme.surfaceContainer,
+      textColor: colorScheme.onSurface,
+      textStyle: textTheme.bodyMedium,
     );
   }
 }
