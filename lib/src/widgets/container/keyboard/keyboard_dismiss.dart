@@ -13,7 +13,7 @@ class KeyboardDismiss extends StatelessWidget {
         // 点击空白处隐藏键盘
         systemHideKeyboard();
       },
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       child: child,
     );
   }
