@@ -66,7 +66,7 @@ class AdaptiveDialogRoute<T> extends PageRoute<T> {
   bool get opaque => false;
 
   @override
-  bool get maintainState => false;
+  bool get maintainState => true;
 
   @override
   Duration get transitionDuration => const Duration(milliseconds: 300);
@@ -88,25 +88,18 @@ class AdaptiveDialogRoute<T> extends PageRoute<T> {
             parent: animation,
             curve: Curves.easeOutCubic,
           )),
-          child: MediaQuery.removePadding(
-            context: context,
-            removeTop: true,
-            removeBottom: true,
-            removeLeft: true,
-            removeRight: true,
-            child: Builder(
-              builder: (BuildContext context) {
-                return CustomSingleChildLayout(
-                  delegate: _AdaptiveDialogLayout(
-                    mediaQuery: mediaQuery,
-                    padding: padding,
-                    maxHeightFactor: maxHeightFactor,
-                    minHeight: minHeight,
-                  ),
-                  child: dialog,
-                );
-              },
-            ),
+          child: Builder(
+            builder: (BuildContext context) {
+              return CustomSingleChildLayout(
+                delegate: _AdaptiveDialogLayout(
+                  mediaQuery: mediaQuery,
+                  padding: padding,
+                  maxHeightFactor: maxHeightFactor,
+                  minHeight: minHeight,
+                ),
+                child: dialog,
+              );
+            },
           ),
         );
       },
