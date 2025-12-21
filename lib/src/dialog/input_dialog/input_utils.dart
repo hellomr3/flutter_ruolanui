@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ruolanui/src/core/result.dart';
-import 'package:ruolanui/src/widgets/textfield/clear_input_textfield.dart';
+import 'package:ruolanui/ruolanui.dart';
 
 /// 优化后的输入弹窗，从底部弹出的同时拉起键盘，支持传入数据校验。
 /// 如果已有数据，则会显示在输入框中，并且选中
@@ -15,7 +14,7 @@ Future<Result<String>> showBottomInputDialog(
 }) async {
   final textTheme = Theme.of(context).textTheme;
   final c = Theme.of(context).colorScheme;
-  final controller = TextEditingController(text: initialValue);
+  final controller = TextEditingController(text: initialValue ?? "");
   final result = await showModalBottomSheet<Result<String>>(
     context: context,
     backgroundColor: Colors.transparent,
@@ -39,17 +38,16 @@ Future<Result<String>> showBottomInputDialog(
                 padding: const EdgeInsets.symmetric(vertical: 36),
                 child: Text(title, style: textTheme.titleMedium),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ClearInputTextField(
+              AppTextField(
                   hintText: hintText,
-                  controller: controller,
+                  onChange: (v) {},
                   fillColor: c.surfaceContainer,
-                  autoFocus: true,
+                  autofocus: true,
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                  ),
                   keyboardType: keyboardType,
-                  onChange: (String value) {},
-                ),
-              ),
+                  controller: controller),
               SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -93,6 +91,7 @@ Future<Result<String>> showBottomInputDialog(
       );
     },
   );
+  controller.dispose();
   if (result == null) {
     return Result.failure("取消");
   }
