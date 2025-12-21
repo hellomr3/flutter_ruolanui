@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ruolanui/src/core/result.dart';
-import 'package:tdesign_flutter/tdesign_flutter.dart';
+import 'package:ruolanui/src/widgets/textfield/clear_input_textfield.dart';
 
-/// 优化后的输入弹窗，使用 TDInputDialog 实现
+/// 优化后的输入弹窗，从底部弹出的同时拉起键盘，支持传入数据校验。
+/// 如果已有数据，则会显示在输入框中，并且选中
 Future<Result<String>> showBottomInputDialog(
   BuildContext context, {
   required String title,
@@ -12,27 +13,88 @@ Future<Result<String>> showBottomInputDialog(
   String? cancelText,
   TextInputType? keyboardType,
 }) async {
-  final result = await showGeneralDialog<String>(
+  final textTheme = Theme.of(context).textTheme;
+  final c = Theme.of(context).colorScheme;
+  final controller = TextEditingController(text: initialValue);
+  final result = await showModalBottomSheet<Result<String>>(
     context: context,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final controller = TextEditingController(text: initialValue);
-
-      return TDInputDialog(
-        textEditingController: controller,
-        title: title,
-        hintText: hintText,
-        rightBtn: TDDialogButtonOptions(
-          title: confirmText ?? "确认",
-          action: () {
-            Navigator.of(context).pop(controller.text);
-          },
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) {
+      return SafeArea(
+        child: Container(
+          margin: EdgeInsets.only(
+            left: 12,
+            right: 12,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+          ),
+          decoration: BoxDecoration(
+            color: c.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 36),
+                child: Text(title, style: textTheme.titleMedium),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ClearInputTextField(
+                  hintText: hintText,
+                  controller: controller,
+                  fillColor: c.surfaceContainer,
+                  autoFocus: true,
+                  keyboardType: keyboardType,
+                  onChange: (String value) {},
+                ),
+              ),
+              SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          cancelText ?? "取消",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.pop(
+                              context, Result.success(controller.text));
+                        },
+                        child: Text(
+                          confirmText ?? "确认",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       );
     },
   );
-
-  if (result != null && result.isNotEmpty) {
-    return Result.success(result);
+  if (result == null) {
+    return Result.failure("取消");
   }
-  return Result.failure("取消");
+  return result;
 }
