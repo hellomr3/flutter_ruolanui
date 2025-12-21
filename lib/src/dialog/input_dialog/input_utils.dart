@@ -15,12 +15,12 @@ Future<Result<String>> showBottomInputDialog(
 }) async {
   final textTheme = Theme.of(context).textTheme;
   final c = Theme.of(context).colorScheme;
+  final controller = TextEditingController(text: initialValue);
   final result = await showModalBottomSheet<Result<String>>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (context) {
-      var inputText = initialValue ?? "";
       return SafeArea(
         child: Container(
           margin: EdgeInsets.only(
@@ -43,13 +43,11 @@ Future<Result<String>> showBottomInputDialog(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: ClearInputTextField(
                   hintText: hintText,
-                  value: initialValue ?? "",
-                  onChange: (v) {
-                    inputText = v;
-                  },
+                  controller: controller,
                   fillColor: c.surfaceContainer,
                   autoFocus: true,
                   keyboardType: keyboardType,
+                  onChange: (String value) {},
                 ),
               ),
               SizedBox(height: 20),
@@ -75,7 +73,8 @@ Future<Result<String>> showBottomInputDialog(
                     Expanded(
                       child: FilledButton(
                         onPressed: () {
-                          Navigator.pop(context, Result.success(inputText));
+                          Navigator.pop(
+                              context, Result.success(controller.text));
                         },
                         child: Text(
                           confirmText ?? "确认",
