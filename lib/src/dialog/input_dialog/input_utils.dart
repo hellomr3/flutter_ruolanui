@@ -38,16 +38,19 @@ Future<Result<String>> showBottomInputDialog(
                 padding: const EdgeInsets.symmetric(vertical: 36),
                 child: Text(title, style: textTheme.titleMedium),
               ),
-              AppTextField(
-                  hintText: hintText,
-                  onChange: (v) {},
-                  fillColor: c.surfaceContainer,
-                  autofocus: true,
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                  ),
-                  keyboardType: keyboardType,
-                  controller: controller),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: AppTextField(
+                    hintText: hintText,
+                    onChange: (v) {},
+                    fillColor: c.surfaceContainer,
+                    autofocus: true,
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide.none,
+                    ),
+                    keyboardType: keyboardType,
+                    controller: controller),
+              ),
               SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -91,7 +94,6 @@ Future<Result<String>> showBottomInputDialog(
       );
     },
   );
-  controller.dispose();
   if (result == null) {
     return Result.failure("取消");
   }
