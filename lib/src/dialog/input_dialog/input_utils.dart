@@ -48,6 +48,12 @@ Future<Result<String>> showBottomInputDialog(
                     border: OutlineInputBorder(
                       borderSide: BorderSide.none,
                     ),
+                    tailIcon: IconButton(
+                      onPressed: () {
+                        controller.clear();
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
                     keyboardType: keyboardType,
                     controller: controller),
               ),
