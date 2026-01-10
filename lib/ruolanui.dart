@@ -17,3 +17,4 @@ export 'src/widgets/container/keyboard/keyboard_dismiss.dart';
 // widgets
 export 'src/widgets/textfield/app_textfield.dart';
 export 'src/widgets/textfield/clear_input_textfield.dart';
+export 'src/widgets/textfield/observable_text_controller.dart';

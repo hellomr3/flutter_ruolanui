@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'base_btn.dart';
 
 class NormalBtn extends StatelessWidget {
   final String label;
   final double height;
+  final double? width;
   final double borderRadius;
   final VoidCallback? onPressed;
 
@@ -11,6 +13,7 @@ class NormalBtn extends StatelessWidget {
     super.key,
     required this.label,
     this.height = 44,
+    this.width,
     this.borderRadius = 22,
     this.onPressed,
   });
@@ -22,6 +25,7 @@ class NormalBtn extends StatelessWidget {
     return BaseBtn(
       label: label,
       height: height,
+      width: width,
       borderRadius: borderRadius,
       onPressed: onPressed,
       edgeInsets: EdgeInsets.zero,
