@@ -15,6 +15,7 @@ class ObservableTextController extends TextEditingController {
     _disposer = reaction(
       (_) => getter(),
       (String value) {
+        print('当前数据为AAA:$value');
         if (text != value) {
           _isUpdatingFromStore = true;
           // 更新文本并保持光标位置
@@ -35,6 +36,17 @@ class ObservableTextController extends TextEditingController {
         setter(text);
       }
     });
+
+    // 3. 手动同步初始值
+    final initialValue = getter();
+    if (text != initialValue) {
+      _isUpdatingFromStore = true;
+      this.value = this.value.copyWith(
+            text: initialValue,
+            selection: TextSelection.collapsed(offset: initialValue.length),
+          );
+      _isUpdatingFromStore = false;
+    }
   }
 
   @override
