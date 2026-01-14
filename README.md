@@ -32,7 +32,10 @@ Flutter 版本自用 UI 库，提供常用的通用组件。
 ### 其他组件
 - `CommonAppBar` - 通用应用栏
 - `ConditionalBuilder` - 条件构建器
-- `MultilineTextEditorPage` - 多行文本编辑器
+- **[MultilineTextEditorPage](lib/src/widgets/multiline_text_editor_page/README.md)** - 多行文本编辑器
+  - 支持有序列表（1、2、3、）和无序列表（●）
+  - 自动延续序号和智能重算
+  - 字数统计和清空功能
 
 ## 安装
 
@@ -74,6 +77,7 @@ TwoPaneSelector<MyEntity, String>(
 ## 文档
 
 - [双栏选择器使用文档](lib/src/widgets/select/README.md)
+- [多行文本编辑器使用文档](lib/src/widgets/multiline_text_editor_page/README.md)
 
 ## 开发
 

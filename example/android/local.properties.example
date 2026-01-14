@@ -1,0 +1,4 @@
+# This file should be configured with your local Flutter SDK path
+# Copy this file to local.properties and set flutter.sdk
+
+flutter.sdk=/path/to/your/flutter/sdk
