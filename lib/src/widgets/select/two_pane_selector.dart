@@ -67,31 +67,22 @@ class TwoPaneSelector<T, ID> extends StatefulWidget {
   final VoidCallback? onBack;
 
   /// 子项点击回调（单选模式，返回选中的项目）
+  /// 注意：在单选模式下，需要外部在此回调中处理关闭弹窗等逻辑
+  /// 多选模式下不使用此回调
   final void Function(T? selectedItem)? onItemTap;
 
   /// 主题配置
   final TwoPaneSelectorTheme? theme;
 
-  /// 是否显示"全部"选项（多选模式下，在右侧列表顶部显示）
-  final bool showSelectAll;
+  // ========== 新增："全部"选项配置 ==========
 
-  /// "全部"选项的文字
-  final String selectAllText;
+  /// 一级"全部"选项的数据（null 表示不显示一级"全部"）
+  final T? parentAllItem;
 
-  /// "全部"选项的构建器
-  final Widget Function(
-    BuildContext context,
-    bool isSelected,
-    VoidCallback onTap,
-  )? selectAllBuilder;
-
-  /// 子项点击覆盖回调（返回 true 表示阻止默认行为）
-  /// 可用于特殊项目的自定义处理，例如虚拟"全部"项
-  final bool Function(T item)? onItemTapOverride;
-
-  /// 子项选中状态覆盖回调（可用于自定义选中状态显示）
-  /// 接收项目和默认选中状态，返回实际是否应该显示为选中
-  final bool Function(T item, bool defaultIsSelected)? isSelectedOverride;
+  /// 二级"全部"选项的数据构建器
+  /// 参数：当前选中的父项ID
+  /// 返回：二级"全部"选项的数据（null 表示不显示二级"全部"）
+  final T? Function(ID? parentItemId) childAllItemBuilder;
 
   const TwoPaneSelector({
     super.key,
@@ -111,11 +102,8 @@ class TwoPaneSelector<T, ID> extends StatefulWidget {
     this.onBack,
     this.onItemTap,
     this.theme,
-    this.showSelectAll = false,
-    this.selectAllText = "全部",
-    this.selectAllBuilder,
-    this.onItemTapOverride,
-    this.isSelectedOverride,
+    this.parentAllItem,
+    required this.childAllItemBuilder,
   });
 
   @override
@@ -141,9 +129,16 @@ class TwoPaneSelectorState<T, ID> extends State<TwoPaneSelector<T, ID>> {
       idExtractor: widget.idExtractor,
       parentIdExtractor: widget.parentIdExtractor,
     );
+
+    // 如果 initialParentId 为 null 且配置了 parentAllItem，则使用 parentAllItem 的 ID 作为默认值
+    final effectiveInitialParentId = widget.initialParentId ??
+        (widget.parentAllItem != null
+            ? widget.idExtractor(widget.parentAllItem!)
+            : null);
+
     controller.init(
       widget.items,
-      initialParentId: widget.initialParentId,
+      initialParentId: effectiveInitialParentId,
       selectedIds: widget.initialSelectedIds,
     );
   }
@@ -221,24 +216,27 @@ class TwoPaneSelectorState<T, ID> extends State<TwoPaneSelector<T, ID>> {
                 width: MediaQuery.of(context).size.width *
                     theme.leftPanelWidthFactor,
                 color: theme.leftPanelColor ?? colorScheme.surface,
-                child: ListView.builder(
+                child: ListView(
                   padding: EdgeInsets.zero,
-                  itemCount: parentItems.length,
-                  itemBuilder: (context, index) {
-                    final item = parentItems[index];
-                    final itemId = widget.idExtractor(item);
-                    final isSelected = selectedParentId == itemId;
-                    final hasSelectedItems =
-                        controller.hasSelectedChildren(item);
+                  children: [
+                    // 左侧顶部"全部"选项（如果配置了）
+                    if (widget.parentAllItem != null) _buildParentAllItem(),
+                    // 父项列表
+                    ...parentItems.map((item) {
+                      final itemId = widget.idExtractor(item);
+                      final isSelected = selectedParentId == itemId;
+                      final hasSelectedItems =
+                          controller.hasSelectedChildren(item);
 
-                    return widget.parentItemBuilder(
-                      context,
-                      item,
-                      isSelected,
-                      hasSelectedItems,
-                      () => controller.selectParent(itemId),
-                    );
-                  },
+                      return widget.parentItemBuilder(
+                        context,
+                        item,
+                        isSelected,
+                        hasSelectedItems,
+                        () => controller.selectParent(itemId),
+                      );
+                    }),
+                  ],
                 ),
               ),
               // 右侧子项列表
@@ -250,20 +248,13 @@ class TwoPaneSelectorState<T, ID> extends State<TwoPaneSelector<T, ID>> {
                       : ListView(
                           padding: EdgeInsets.zero,
                           children: [
-                            // "全部"选项（仅在多选模式且 showSelectAll 为 true 时显示）
-                            if (widget.showSelectAll &&
-                                widget.mode == SelectorMode.multiple)
-                              _buildSelectAll(selectedParentId),
+                            // 右侧顶部"全部"选项（如果配置了）
+                            _buildChildAllItem(selectedParentId),
                             // 子项列表
                             ...childItems.map((item) {
                               final itemId = widget.idExtractor(item);
-                              final defaultIsSelected =
-                                  controller.selectedIds.contains(itemId);
                               final isSelected =
-                                  widget.isSelectedOverride != null
-                                      ? widget.isSelectedOverride!(
-                                          item, defaultIsSelected)
-                                      : defaultIsSelected;
+                                  controller.selectedIds.contains(itemId);
                               return widget.childItemBuilder(
                                 context,
                                 item,
@@ -282,40 +273,96 @@ class TwoPaneSelectorState<T, ID> extends State<TwoPaneSelector<T, ID>> {
     );
   }
 
-  /// "全部"选项的构建器
-  Widget _buildSelectAll(ID? selectedParentId) {
-    final allSelected = controller.areAllChildrenSelected(selectedParentId);
-    return widget.selectAllBuilder != null
-        ? widget.selectAllBuilder!(
-            context,
-            allSelected,
-            () => controller.toggleAllChildren(selectedParentId),
-          )
-        : _buildDefaultSelectAll(allSelected);
+  /// 构建一级"全部"选项
+  Widget _buildParentAllItem() {
+    final allItem = widget.parentAllItem!;
+    final allItemId = widget.idExtractor(allItem);
+    final isSelected = controller.selectedParentId == allItemId;
+
+    return widget.parentItemBuilder(
+      context,
+      allItem,
+      isSelected,
+      false,
+      () => controller.selectParent(allItemId),
+    );
   }
 
-  /// 默认的"全部"选项构建器
-  Widget _buildDefaultSelectAll(bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Text(
-            widget.selectAllText,
-            style: textTheme.bodyLarge?.copyWith(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          const Spacer(),
-          if (isSelected)
-            Icon(
-              Icons.check_circle,
-              color: colorScheme.primary,
-              size: 20,
-            ),
-        ],
-      ),
+  /// 构建二级"全部"选项
+  Widget _buildChildAllItem(ID? selectedParentId) {
+    if (selectedParentId == null) return const SizedBox.shrink();
+
+    // 调用外部构建器获取二级"全部"选项数据
+    final childAllItem = widget.childAllItemBuilder?.call(selectedParentId);
+    if (childAllItem == null) return const SizedBox.shrink();
+
+    final childAllItemId = widget.idExtractor(childAllItem);
+
+    // 检查是否是"全部"项（ID 等于父项 ID）
+    // 如果是，则检查父项是否被选中
+    final bool isSelected;
+    if (childAllItemId == selectedParentId) {
+      // 这是"全部"项，选中状态取决于父项是否被选中
+      isSelected = controller.selectedIds.contains(selectedParentId);
+    } else {
+      // 普通子项，检查自己是否被选中
+      isSelected = controller.selectedIds.contains(childAllItemId);
+    }
+
+    return widget.childItemBuilder(
+      context,
+      childAllItem,
+      isSelected,
+      () => _handleChildAllItemTap(childAllItem, selectedParentId),
     );
+  }
+
+  /// 处理二级"全部"选项的点击
+  void _handleChildAllItemTap(T childAllItem, ID parentItemId) {
+    final childAllItemId = widget.idExtractor(childAllItem);
+
+    // 切换显示到该父项
+    controller.selectParent(parentItemId);
+
+    // 检查是否是"全部"项（ID 等于父项 ID）
+    if (childAllItemId == parentItemId) {
+      // 检查是否是一级"全部"下的二级"全部"
+      final parentAllId = widget.parentAllItem != null
+          ? widget.idExtractor(widget.parentAllItem!)
+          : null;
+      final isGlobalAll = parentAllId != null && parentItemId == parentAllId;
+
+      T? returnValue;
+
+      if (isGlobalAll) {
+        // 这是一级"全部"下的二级"全部"，返回空数据
+        returnValue = null;
+      } else {
+        // 这是普通父项下的二级"全部"
+        // 切换父项的选中状态
+        controller.toggleAllChildren(parentItemId);
+        // 返回父项
+        returnValue = controller.selectedItem;
+      }
+
+      // 点击时回调外部方法
+      widget.onItemTap?.call(returnValue);
+      return;
+    }
+
+    // 正常子项：使用常规的选中逻辑
+    _handleItemTap(childAllItem);
+  }
+
+  void _handleItemTap(T item) {
+    final itemId = widget.idExtractor(item);
+    controller.toggleSelection(itemId);
+
+    // 单选模式下，选择后调用 onItemTap，由外部处理返回逻辑（关闭弹窗等）
+    if (widget.mode == SelectorMode.single) {
+      final selectedItem = controller.selectedItem;
+      widget.onItemTap?.call(selectedItem);
+    }
   }
 
   Widget _defaultEmptyState() {
@@ -369,22 +416,6 @@ class TwoPaneSelectorState<T, ID> extends State<TwoPaneSelector<T, ID>> {
     );
   }
 
-  void _handleItemTap(T item) {
-    // 如果有自定义点击处理，且返回 true，则阻止默认行为
-    if (widget.onItemTapOverride?.call(item) == true) {
-      return;
-    }
-
-    final itemId = widget.idExtractor(item);
-    controller.toggleSelection(itemId);
-
-    // 单选模式下，选择后立即通知调用者
-    if (widget.mode == SelectorMode.single) {
-      final selectedItem = controller.selectedItem;
-      widget.onItemTap?.call(selectedItem);
-    }
-  }
-
   /// 获取选中的项目列表
   List<T> get selectedItems => controller.selectedItems;
 
@@ -393,6 +424,12 @@ class TwoPaneSelectorState<T, ID> extends State<TwoPaneSelector<T, ID>> {
 
   /// 获取选中的项目（单选模式）
   T? get selectedItem => controller.selectedItem;
+
+  /// 获取当前选中的父项ID
+  ID? get selectedParentId => controller.selectedParentId;
+
+  /// 获取控制器（用于高级用法）
+  TwoPaneSelectorController<T, ID> get controllerValue => controller;
 
   @override
   void dispose() {

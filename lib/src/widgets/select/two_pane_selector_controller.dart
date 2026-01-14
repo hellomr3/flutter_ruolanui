@@ -32,34 +32,43 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
   List<T> get parentItems =>
       _items.where((i) => parentIdExtractor(i) == null).toList();
 
-  /// 子项列表
+  /// 子项列表（包含虚拟"全部"项）
   List<T> get childItems {
     if (_selectedParentId == null) return [];
     return _items.where((i) => parentIdExtractor(i) == _selectedParentId).toList();
   }
 
-  /// 选中的项目列表
-  /// 排除虚拟"全部"项（id == pid 的项），只返回实际选中的项目
-  List<T> get selectedItems =>
-      _items.where((i) {
-        final id = idExtractor(i);
-        final pid = parentIdExtractor(i);
-        // 排除虚拟"全部"项（id == pid 且 pid != null）
-        if (pid != null && id == pid) return false;
-        return _selectedIds.contains(id);
-      }).toList();
+  /// 获取虚拟"全部"项（用于内部判断）
+  T? getVirtualAllItem() {
+    if (_selectedParentId == null) return null;
+    return _items.firstWhere(
+      (i) => idExtractor(i) == _selectedParentId && parentIdExtractor(i) == null,
+      orElse: () => _items.first,
+    );
+  }
+
+  /// 选中的项目列表（用于底部展示）
+  /// 多选模式：返回所有选中的项（父项和子项）
+  /// 如果父项被选中，只返回父项；如果是部分子项被选中，返回子项
+  List<T> get selectedItems {
+    final result = <T>[];
+    for (final item in _items) {
+      final id = idExtractor(item);
+      if (_selectedIds.contains(id)) {
+        result.add(item);
+      }
+    }
+    return result;
+  }
 
   /// 获取选中的项目（单选模式）
   T? get selectedItem {
     if (_selectedIds.isEmpty) return null;
     final id = _selectedIds.first;
-    return _items.firstWhere((i) {
-      final itemId = idExtractor(i);
-      final pid = parentIdExtractor(i);
-      // 排除虚拟"全部"项
-      if (pid != null && itemId == pid) return false;
-      return itemId == id;
-    }, orElse: () => _items.first);
+    return _items.firstWhere(
+      (i) => idExtractor(i) == id,
+      orElse: () => _items.first,
+    );
   }
 
   /// 初始化数据
@@ -88,6 +97,10 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
         // 如果本身就是父项，则选中自己
         _selectedParentId = firstSelectedId;
       }
+    } else {
+      // 如果既没有提供 initialParentId，也没有选中项
+      // 则保持 _selectedParentId 为 null（将由 TwoPaneSelector 处理）
+      _selectedParentId = null;
     }
 
     notifyListeners();
@@ -115,50 +128,44 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 处理父项的选择
+  /// 处理父项的选择（多选模式下，选中父项 = 选中该父项下的全部）
   void _handleParentSelection(ID parentId) {
     if (_selectedIds.contains(parentId)) {
+      // 取消选中父项
       _selectedIds.remove(parentId);
-      return;
+    } else {
+      // 选中父项，清除该父项下的所有子项选中状态
+      final childIds = _items
+          .where((i) => parentIdExtractor(i) == parentId)
+          .map(idExtractor)
+          .toList();
+      _selectedIds.removeAll(childIds);
+      _selectedIds.add(parentId);
     }
-
-    // 获取所有子项（包括虚拟"全部"项），以便清除它们
-    final childIds = _items
-        .where((i) => parentIdExtractor(i) == parentId)
-        .map(idExtractor)
-        .toList();
-
-    _selectedIds.removeAll(childIds);
-    _selectedIds.add(parentId);
   }
 
   /// 处理子项的选择
   void _handleChildSelection(ID itemId, ID parentId) {
+    // 先移除父项的选中状态（因为选择了具体子项）
+    _selectedIds.remove(parentId);
+
     if (_selectedIds.contains(itemId)) {
       _selectedIds.remove(itemId);
     } else {
       _selectedIds.add(itemId);
     }
 
-    _selectedIds.remove(parentId);
-
-    // 获取所有真实子项（排除虚拟"全部"项，即排除 id == pid 的项）
+    // 获取所有子项
     final childIds = _items
-        .where((i) {
-          final pid = parentIdExtractor(i);
-          final id = idExtractor(i);
-          return pid == parentId && id != parentId;
-        })
+        .where((i) => parentIdExtractor(i) == parentId)
         .map(idExtractor)
         .toList();
 
-    // 如果有真实子项，检查是否全部被选中
-    if (childIds.isNotEmpty) {
-      final allChildrenSelected = childIds.every((id) => _selectedIds.contains(id));
-      if (allChildrenSelected) {
-        _selectedIds.removeAll(childIds);
-        _selectedIds.add(parentId);
-      }
+    // 检查是否所有子项都被选中
+    if (childIds.isNotEmpty && childIds.every((id) => _selectedIds.contains(id))) {
+      // 全部选中时，移除所有子项，只保留父项
+      _selectedIds.removeAll(childIds);
+      _selectedIds.add(parentId);
     }
   }
 
@@ -170,29 +177,37 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
         _items.any((i) => idExtractor(i) == id && parentIdExtractor(i) == parentId));
   }
 
+  /// 检查父项是否被选中（表示选中了该父项下的全部）
+  bool isParentSelected(ID? parentId) {
+    if (parentId == null) return false;
+    return _selectedIds.contains(parentId);
+  }
+
   /// 检查当前父级下的所有子项是否都被选中
   bool areAllChildrenSelected(ID? parentId) {
     if (parentId == null) return false;
+    // 如果父项被选中，表示全部被选中
+    if (_selectedIds.contains(parentId)) return true;
+    
     final childIds =
         _items.where((i) => parentIdExtractor(i) == parentId).map(idExtractor).toList();
     if (childIds.isEmpty) return false;
     return childIds.every((id) => _selectedIds.contains(id));
   }
 
-  /// 切换当前父级下所有子项的选中状态
+  /// 切换"全部"选项（实际上是切换父项的选中状态）
   void toggleAllChildren(ID? parentId) {
     if (parentId == null) return;
 
-    final childIds =
-        _items.where((i) => parentIdExtractor(i) == parentId).map(idExtractor).toList();
-    final allSelected = childIds.every((id) => _selectedIds.contains(id));
-
-    if (allSelected) {
-      // 如果全部选中，则取消选择所有子项
-      _selectedIds.removeAll(childIds);
+    if (_selectedIds.contains(parentId)) {
+      // 如果父项被选中，取消选中
+      _selectedIds.remove(parentId);
     } else {
-      // 否则，选中所有子项
-      _selectedIds.addAll(childIds);
+      // 否则，选中父项，并清除所有子项
+      final childIds =
+          _items.where((i) => parentIdExtractor(i) == parentId).map(idExtractor).toList();
+      _selectedIds.removeAll(childIds);
+      _selectedIds.add(parentId);
     }
 
     notifyListeners();

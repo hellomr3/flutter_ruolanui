@@ -13,6 +13,8 @@ class _DemoPageState extends State<DemoPage> {
   final _textFieldController = TextEditingController();
   final _clearInputController = TextEditingController();
   String? _selectedOption;
+  String? _selectedCategory;
+  final Set<String> _selectedItems = {};
 
   @override
   void dispose() {
@@ -59,7 +61,6 @@ class _DemoPageState extends State<DemoPage> {
               ],
             ),
             const SizedBox(height: 32),
-
             _buildSectionTitle('输入框组件'),
             const SizedBox(height: 12),
             AppTextField(
@@ -76,7 +77,6 @@ class _DemoPageState extends State<DemoPage> {
               onChange: (_) {},
             ),
             const SizedBox(height: 32),
-
             _buildSectionTitle('对话框组件'),
             const SizedBox(height: 12),
             Wrap(
@@ -98,12 +98,14 @@ class _DemoPageState extends State<DemoPage> {
               ],
             ),
             const SizedBox(height: 32),
-
+            _buildSectionTitle('选择器组件'),
+            const SizedBox(height: 12),
+            _buildSelectorSection(),
+            const SizedBox(height: 32),
             _buildSectionTitle('多行文本编辑器'),
             const SizedBox(height: 12),
             _buildEditorSection(),
             const SizedBox(height: 32),
-
             _buildSectionTitle('条件构建器'),
             const SizedBox(height: 12),
             ConditionalBuilder(
@@ -149,6 +151,55 @@ class _DemoPageState extends State<DemoPage> {
       style: theme.textTheme.titleLarge?.copyWith(
         fontWeight: FontWeight.bold,
       ),
+    );
+  }
+
+  Widget _buildSelectorSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SelectorButton(
+          label: '单选选择器',
+          description: '选择单个项目',
+          icon: Icons.radio_button_checked,
+          onPressed: _showSingleSelector,
+        ),
+        const SizedBox(height: 12),
+        _SelectorButton(
+          label: '多选选择器',
+          description: '选择多个项目',
+          icon: Icons.check_box,
+          onPressed: _showMultipleSelector,
+        ),
+        const SizedBox(height: 12),
+        _SelectorButton(
+          label: '带全选多选',
+          description: '支持全选功能',
+          icon: Icons.select_all,
+          onPressed: _showSelectorWithSelectAll,
+        ),
+        const SizedBox(height: 12),
+        _SelectorButton(
+          label: '自定义主题',
+          description: '自定义选择器样式',
+          icon: Icons.palette,
+          onPressed: _showSelectorWithTheme,
+        ),
+        if (_selectedItems.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '已选择: ${_selectedItems.join(", ")}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -246,6 +297,388 @@ class _DemoPageState extends State<DemoPage> {
         },
       );
     });
+  }
+
+  /// 单选选择器
+  void _showSingleSelector() {
+    final items = _buildCategoryData();
+
+    SelectorDialog.showSingle<CategoryItem, String>(
+      context: context,
+      title: '选择分类',
+      items: items,
+      idExtractor: (item) => item.id,
+      parentIdExtractor: (item) => item.parentId,
+      initialSelectedId: _selectedCategory,
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems, onTap) {
+        final theme = Theme.of(context);
+        return ListTile(
+          leading: Icon(
+            isSelected ? Icons.folder_open : Icons.folder,
+            color: isSelected ? theme.colorScheme.primary : null,
+          ),
+          title: Text(
+            item.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isSelected ? theme.colorScheme.primary : null,
+              fontWeight: isSelected ? FontWeight.bold : null,
+            ),
+          ),
+          onTap: onTap,
+        );
+      },
+      childItemBuilder: (context, item, isSelected, onTap) {
+        final theme = Theme.of(context);
+        return ListTile(
+          leading: Icon(
+            isSelected ? Icons.check_circle : Icons.circle_outlined,
+            color: isSelected ? theme.colorScheme.primary : null,
+          ),
+          title: Text(
+            item.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isSelected ? theme.colorScheme.primary : null,
+            ),
+          ),
+          onTap: onTap,
+        );
+      },
+      selectedItemBuilder: (context, item, onRemove) {
+        return Chip(
+          label: Text(item.name),
+          onDeleted: onRemove,
+          avatar: const Icon(Icons.check_circle, size: 18),
+        );
+      },
+    ).then((selected) {
+      if (selected != null) {
+        setState(() => _selectedCategory = selected.id);
+        _showSnackbar('选择了: ${selected.name}');
+      }
+    });
+  }
+
+  /// 多选选择器
+  void _showMultipleSelector() {
+    final items = _buildProductData();
+
+    SelectorDialog.showMultiple<ProductItem, String>(
+      context: context,
+      title: '选择产品',
+      items: items,
+      idExtractor: (item) => item.id,
+      parentIdExtractor: (item) => item.categoryId,
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems, onTap) {
+        final theme = Theme.of(context);
+        return ListTile(
+          leading: Badge(
+            label: Text(item.childCount.toString()),
+            child: Icon(
+              Icons.category,
+              color: isSelected ? theme.colorScheme.primary : null,
+            ),
+          ),
+          title: Text(
+            item.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          onTap: onTap,
+        );
+      },
+      childItemBuilder: (context, item, isSelected, onTap) {
+        final theme = Theme.of(context);
+        return CheckboxListTile(
+          value: isSelected,
+          onChanged: (_) => onTap(),
+          title: Text(item.name),
+          subtitle: Text('¥${item.price.toStringAsFixed(2)}'),
+          secondary: Icon(
+            isSelected ? Icons.check_circle : Icons.circle_outlined,
+            color: isSelected ? theme.colorScheme.primary : null,
+          ),
+        );
+      },
+      selectedItemBuilder: (context, item, onRemove) {
+        return Chip(
+          label: Text(item.name),
+          onDeleted: onRemove,
+        );
+      },
+    ).then((selected) {
+      if (selected.isNotEmpty) {
+        setState(() => _selectedItems.clear());
+        setState(() => _selectedItems.addAll(selected.map((e) => e.name)));
+        _showSnackbar('已选择 ${selected.length} 个产品');
+      }
+    });
+  }
+
+  /// 带全选的多选选择器
+  void _showSelectorWithSelectAll() {
+    final items = _buildCityData();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('选择城市'),
+          ),
+          body: TwoPaneSelector<CityItem, String>(
+            title: '选择城市',
+            mode: SelectorMode.multiple,
+            items: items,
+            idExtractor: (item) => item.id,
+            parentIdExtractor: (item) => item.parentId,
+            selectAllText: '全部',
+            parentItemBuilder:
+                (context, item, isSelected, hasSelectedItems, onTap) {
+              final theme = Theme.of(context);
+              return ListTile(
+                leading: Icon(
+                  isSelected
+                      ? Icons.location_city
+                      : Icons.location_city_outlined,
+                  color: isSelected ? theme.colorScheme.primary : null,
+                ),
+                title: Text(
+                  item.name,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                onTap: onTap,
+              );
+            },
+            childItemBuilder: (context, item, isSelected, onTap) {
+              final theme = Theme.of(context);
+              return CheckboxListTile(
+                value: isSelected,
+                onChanged: (_) => onTap(),
+                title: Text(item.name),
+                secondary: Icon(
+                  isSelected ? Icons.check_circle : Icons.circle_outlined,
+                  color: isSelected ? theme.colorScheme.primary : null,
+                ),
+              );
+            },
+            selectedItemBuilder: (context, item, onRemove) {
+              return Chip(
+                label: Text(item.name),
+                onDeleted: onRemove,
+              );
+            },
+            onBack: () => Navigator.pop(context),
+            onConfirm: (selected) {
+              setState(() => _selectedItems.clear());
+              setState(
+                  () => _selectedItems.addAll(selected.map((e) => e.name)));
+              Navigator.pop(context);
+              _showSnackbar('已选择 ${selected.length} 个城市');
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 自定义主题的选择器
+  void _showSelectorWithTheme() {
+    final items = _buildCategoryData();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('自定义主题'),
+            backgroundColor: Colors.deepPurple,
+            foregroundColor: Colors.white,
+          ),
+          body: TwoPaneSelector<CategoryItem, String>(
+            title: '选择分类',
+            mode: SelectorMode.single,
+            items: items,
+            idExtractor: (item) => item.id,
+            parentIdExtractor: (item) => item.parentId,
+            // theme: TwoPaneSelectorTheme(
+            //   backgroundColor: const Color(0xFFF5F5F5),
+            //   surfaceColor: Colors.white,
+            //   primaryColor: Colors.deepPurple,
+            //   onPrimaryColor: Colors.white,
+            //   dividerColor: const Color(0xFFE0E0E0),
+            //   selectedBackgroundColor: const Color(0xFFEDE7F6),
+            // ),
+            parentItemBuilder:
+                (context, item, isSelected, hasSelectedItems, onTap) {
+              return GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFFEDE7F6) : null,
+                    border: Border(
+                      left: BorderSide(
+                        color:
+                            isSelected ? Colors.deepPurple : Colors.transparent,
+                        width: 4,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.folder,
+                        color: isSelected ? Colors.deepPurple : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        item.name,
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          color:
+                              isSelected ? Colors.deepPurple : Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            childItemBuilder: (context, item, isSelected, onTap) {
+              return GestureDetector(
+                onTap: onTap,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected ? Icons.check_circle : Icons.circle_outlined,
+                        color: isSelected ? Colors.deepPurple : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          style: TextStyle(
+                            color:
+                                isSelected ? Colors.deepPurple : Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+            selectedItemBuilder: (context, item, onRemove) {
+              return Chip(
+                label: Text(item.name),
+                backgroundColor: Colors.deepPurple,
+                labelStyle: const TextStyle(color: Colors.white),
+                deleteIconColor: Colors.white,
+                onDeleted: onRemove,
+              );
+            },
+            onBack: () => Navigator.pop(context),
+            onItemTap: (selected) {
+              if (selected != null) {
+                setState(() => _selectedCategory = selected.id);
+                Navigator.pop(context);
+                _showSnackbar('选择了: ${selected.name}');
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建分类数据
+  List<CategoryItem> _buildCategoryData() {
+    return [
+      CategoryItem(id: 'electronics', name: '电子产品', parentId: null),
+      CategoryItem(id: 'phone', name: '手机', parentId: 'electronics'),
+      CategoryItem(id: 'laptop', name: '笔记本', parentId: 'electronics'),
+      CategoryItem(id: 'tablet', name: '平板', parentId: 'electronics'),
+      CategoryItem(id: 'clothing', name: '服装', parentId: null),
+      CategoryItem(id: 'men', name: '男装', parentId: 'clothing'),
+      CategoryItem(id: 'women', name: '女装', parentId: 'clothing'),
+      CategoryItem(id: 'kids', name: '童装', parentId: 'clothing'),
+    ];
+  }
+
+  /// 构建产品数据
+  List<ProductItem> _buildProductData() {
+    return [
+      ProductItem(
+          id: 'electronics',
+          name: '电子产品',
+          categoryId: null,
+          childCount: 3,
+          price: 0),
+      ProductItem(
+          id: 'phone1',
+          name: 'iPhone 15',
+          categoryId: 'electronics',
+          childCount: 0,
+          price: 5999),
+      ProductItem(
+          id: 'phone2',
+          name: '华为 Mate 60',
+          categoryId: 'electronics',
+          childCount: 0,
+          price: 5499),
+      ProductItem(
+          id: 'phone3',
+          name: '小米 14',
+          categoryId: 'electronics',
+          childCount: 0,
+          price: 3999),
+      ProductItem(
+          id: 'clothing',
+          name: '服装',
+          categoryId: null,
+          childCount: 3,
+          price: 0),
+      ProductItem(
+          id: 'cloth1',
+          name: '羽绒服',
+          categoryId: 'clothing',
+          childCount: 0,
+          price: 599),
+      ProductItem(
+          id: 'cloth2',
+          name: '毛衣',
+          categoryId: 'clothing',
+          childCount: 0,
+          price: 299),
+      ProductItem(
+          id: 'cloth3',
+          name: '牛仔裤',
+          categoryId: 'clothing',
+          childCount: 0,
+          price: 199),
+    ];
+  }
+
+  /// 构建城市数据
+  List<CityItem> _buildCityData() {
+    return [
+      CityItem(id: 'east', name: '华东地区', parentId: null),
+      CityItem(id: 'shanghai', name: '上海', parentId: 'east'),
+      CityItem(id: 'hangzhou', name: '杭州', parentId: 'east'),
+      CityItem(id: 'nanjing', name: '南京', parentId: 'east'),
+      CityItem(id: 'north', name: '华北地区', parentId: null),
+      CityItem(id: 'beijing', name: '北京', parentId: 'north'),
+      CityItem(id: 'tianjin', name: '天津', parentId: 'north'),
+      CityItem(id: 'shijiazhuang', name: '石家庄', parentId: 'north'),
+    ];
   }
 
   /// 基本编辑器
@@ -358,6 +791,113 @@ class _DemoPageState extends State<DemoPage> {
             clearButtonColor: const Color(0xFF2196F3),
             clearButtonDisabledColor: const Color(0xFFBDBDBD),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 分类数据项
+class CategoryItem {
+  final String id;
+  final String name;
+  final String? parentId;
+
+  CategoryItem({required this.id, required this.name, this.parentId});
+}
+
+/// 产品数据项
+class ProductItem {
+  final String id;
+  final String name;
+  final String? categoryId;
+  final int childCount;
+  final double price;
+
+  ProductItem({
+    required this.id,
+    required this.name,
+    this.categoryId,
+    required this.childCount,
+    required this.price,
+  });
+}
+
+/// 城市数据项
+class CityItem {
+  final String id;
+  final String name;
+  final String? parentId;
+
+  CityItem({required this.id, required this.name, this.parentId});
+}
+
+/// 选择器按钮组件
+class _SelectorButton extends StatelessWidget {
+  final String label;
+  final String description;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _SelectorButton({
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: colorScheme.primary,
+              size: 28,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: colorScheme.onSurfaceVariant,
+              size: 16,
+            ),
+          ],
         ),
       ),
     );
