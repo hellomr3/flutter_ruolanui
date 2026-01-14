@@ -59,6 +59,7 @@ class _DemoPageState extends State<DemoPage> {
               ],
             ),
             const SizedBox(height: 32),
+
             _buildSectionTitle('输入框组件'),
             const SizedBox(height: 12),
             AppTextField(
@@ -75,6 +76,7 @@ class _DemoPageState extends State<DemoPage> {
               onChange: (_) {},
             ),
             const SizedBox(height: 32),
+
             _buildSectionTitle('对话框组件'),
             const SizedBox(height: 12),
             Wrap(
@@ -96,13 +98,12 @@ class _DemoPageState extends State<DemoPage> {
               ],
             ),
             const SizedBox(height: 32),
+
             _buildSectionTitle('多行文本编辑器'),
             const SizedBox(height: 12),
-            PrimaryBtn(
-              label: '打开编辑器',
-              onPressed: _openTextEditor,
-            ),
+            _buildEditorSection(),
             const SizedBox(height: 32),
+
             _buildSectionTitle('条件构建器'),
             const SizedBox(height: 12),
             ConditionalBuilder(
@@ -148,6 +149,43 @@ class _DemoPageState extends State<DemoPage> {
       style: theme.textTheme.titleLarge?.copyWith(
         fontWeight: FontWeight.bold,
       ),
+    );
+  }
+
+  Widget _buildEditorSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _EditorButton(
+          label: '基本编辑器',
+          description: '支持有序列表和无序列表',
+          onPressed: _openBasicEditor,
+        ),
+        const SizedBox(height: 12),
+        _EditorButton(
+          label: '带副标题',
+          description: '显示副标题信息',
+          onPressed: _openEditorWithSubtitle,
+        ),
+        const SizedBox(height: 12),
+        _EditorButton(
+          label: '字数限制',
+          description: '最大输入 100 字',
+          onPressed: _openEditorWithLimit,
+        ),
+        const SizedBox(height: 12),
+        _EditorButton(
+          label: '自定义主题',
+          description: '使用深色主题',
+          onPressed: _openEditorWithCustomTheme,
+        ),
+        const SizedBox(height: 12),
+        _EditorButton(
+          label: '完整示例',
+          description: '带副标题 + 字数限制 + 自定义主题',
+          onPressed: _openFullEditor,
+        ),
+      ],
     );
   }
 
@@ -210,21 +248,188 @@ class _DemoPageState extends State<DemoPage> {
     });
   }
 
-  void _openTextEditor() {
+  /// 基本编辑器
+  void _openBasicEditor() {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => MultilineTextEditorPage(
-          title: '文本编辑器',
-          initialText: '''1. 第一项
-2. 第二项
-3. 第三项''',
+          title: '基本编辑器',
+          initialText: '''1. 第一项内容
+2. 第二项内容
+3. 第三项内容''',
         ),
       ),
     ).then((result) {
       if (result != null) {
-        _showSnackbar('已保存编辑内容');
+        _showSnackbar('已保存内容，共 ${result.length} 字');
       }
     });
+  }
+
+  /// 带副标题的编辑器
+  void _openEditorWithSubtitle() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultilineTextEditorPage(
+          title: '编辑内容',
+          subTitle: '请输入详细描述',
+          initialText: '''● 要点一
+● 要点二
+● 要点三''',
+        ),
+      ),
+    );
+  }
+
+  /// 带字数限制的编辑器
+  void _openEditorWithLimit() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultilineTextEditorPage(
+          title: '简短描述',
+          maxInputCount: 100,
+          initialText: '在此输入内容，最多100字',
+          placeholder: '请输入内容...',
+        ),
+      ),
+    );
+  }
+
+  /// 自定义主题的编辑器
+  void _openEditorWithCustomTheme() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultilineTextEditorPage(
+          title: '深色主题编辑器',
+          initialText: '''1. 支持自定义主题
+2. 可配置颜色、样式等
+3. 适配不同的设计风格''',
+          theme: MultilineEditorTheme(
+            backgroundColor: const Color(0xFF1E1E1E),
+            appBarBackgroundColor: const Color(0xFF2D2D2D),
+            titleColor: const Color(0xFFFFFFFF),
+            subTitleColor: const Color(0xFFAAAAAA),
+            backIconColor: const Color(0xFFFFFFFF),
+            confirmButtonColor: const Color(0xFF4CAF50),
+            confirmButtonDisabledColor: const Color(0xFF555555),
+            toolbarBackgroundColor: const Color(0xFF2D2D2D),
+            clearButtonColor: const Color(0xFF4CAF50),
+            clearButtonDisabledColor: const Color(0xFF555555),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 完整示例
+  void _openFullEditor() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultilineTextEditorPage(
+          title: '产品需求描述',
+          subTitle: '请详细描述产品需求，支持列表格式',
+          placeholder: '请输入需求描述...',
+          maxInputCount: 500,
+          initialText: '''1. 功能需求
+   - 用户登录
+   - 数据同步
+
+2. 性能要求
+   - 响应时间 < 100ms
+   - 支持 1000 并发
+
+3. 设计规范
+   • 遵循 Material Design
+   • 使用品牌色调''',
+          theme: MultilineEditorTheme(
+            backgroundColor: Colors.white,
+            appBarBackgroundColor: const Color(0xFFF5F5F5),
+            titleColor: const Color(0xFF212121),
+            subTitleColor: const Color(0xFF757575),
+            backIconColor: const Color(0xFF212121),
+            confirmButtonColor: const Color(0xFF2196F3),
+            confirmButtonDisabledColor: const Color(0xFFBDBDBD),
+            toolbarBackgroundColor: Colors.white,
+            clearButtonColor: const Color(0xFF2196F3),
+            clearButtonDisabledColor: const Color(0xFFBDBDBD),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 编辑器按钮组件
+class _EditorButton extends StatelessWidget {
+  final String label;
+  final String description;
+  final VoidCallback onPressed;
+
+  const _EditorButton({
+    required this.label,
+    required this.description,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.edit_note,
+              color: colorScheme.primary,
+              size: 28,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: colorScheme.onSurfaceVariant,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
