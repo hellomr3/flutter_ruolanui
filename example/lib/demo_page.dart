@@ -432,7 +432,6 @@ class _DemoPageState extends State<DemoPage> {
             items: items,
             idExtractor: (item) => item.id,
             parentIdExtractor: (item) => item.parentId,
-            selectAllText: '全部',
             parentItemBuilder:
                 (context, item, isSelected, hasSelectedItems, onTap) {
               final theme = Theme.of(context);
@@ -478,6 +477,9 @@ class _DemoPageState extends State<DemoPage> {
               Navigator.pop(context);
               _showSnackbar('已选择 ${selected.length} 个城市');
             },
+            childAllItemBuilder: (String? parentItemId) {
+              return CityItem(id: parentItemId ?? "", name: "全部");
+            },
           ),
         ),
       ),
@@ -503,14 +505,9 @@ class _DemoPageState extends State<DemoPage> {
             items: items,
             idExtractor: (item) => item.id,
             parentIdExtractor: (item) => item.parentId,
-            // theme: TwoPaneSelectorTheme(
-            //   backgroundColor: const Color(0xFFF5F5F5),
-            //   surfaceColor: Colors.white,
-            //   primaryColor: Colors.deepPurple,
-            //   onPrimaryColor: Colors.white,
-            //   dividerColor: const Color(0xFFE0E0E0),
-            //   selectedBackgroundColor: const Color(0xFFEDE7F6),
-            // ),
+            childAllItemBuilder: (String? parentItemId) {
+              return CategoryItem(id: parentItemId ?? "", name: "全部");
+            },
             parentItemBuilder:
                 (context, item, isSelected, hasSelectedItems, onTap) {
               return GestureDetector(
