@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ruolanui/src/widgets/btn/primary_btn.dart';
-import 'package:ruolanui/src/widgets/select/selector_dialog.dart';
-import 'package:ruolanui/src/widgets/select/selector_item.dart';
-import 'package:ruolanui/src/widgets/select/two_pane_selector_controller.dart';
-import 'package:ruolanui/src/widgets/select/two_pane_selector_theme.dart';
 import 'package:styled_widget/styled_widget.dart';
+
+import 'selector_dialog.dart';
+import 'selector_item.dart';
+import 'two_pane_selector_controller.dart';
+import 'two_pane_selector_theme.dart';
 
 /// 通用的双栏选择器组件（内部使用，不对外暴露）
 /// [T] 数据类型，必须实现 SelectorItem 接口

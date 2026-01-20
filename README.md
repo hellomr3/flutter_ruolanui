@@ -19,7 +19,7 @@ Flutter 版本自用 UI 库，提供常用的通用组件。
 - `KeyboardDismiss` - 点击空白处关闭键盘
 
 ### 选择器组件
-- **[TwoPaneSelector](lib/src/widgets/select/README.md)** - 通用的双栏选择器
+- **[TwoPaneSelector](lib/src/dialog/two_pane_selector/README.md)** - 通用的双栏选择器
   - 支持单选/多选模式
   - 支持扁平结构和嵌套结构数据
   - 内置父子联动选择逻辑
@@ -76,7 +76,7 @@ TwoPaneSelector<MyEntity, String>(
 
 ## 文档
 
-- [双栏选择器使用文档](lib/src/widgets/select/README.md)
+- [双栏选择器使用文档](lib/src/dialog/two_pane_selector/README.md)
 - [多行文本编辑器使用文档](lib/src/widgets/multiline_text_editor_page/README.md)
 
 ## 开发

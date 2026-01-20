@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:ruolanui/src/widgets/select/selector_dialog.dart';
-import 'package:ruolanui/src/widgets/select/selector_item.dart';
+
+import 'selector_dialog.dart';
+import 'selector_item.dart';
 
 /// 通用的双栏选择器控制器（内部使用）
 /// [T] 数据类型，必须实现 SelectorItem 接口

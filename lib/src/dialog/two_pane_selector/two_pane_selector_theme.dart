@@ -63,7 +63,8 @@ class TwoPaneSelectorTheme {
     this.leftPanelWidthFactor = 0.3,
     this.leftPanelColor,
     this.rightPanelColor,
-    this.headerPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    this.headerPadding =
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     this.titleStyle,
     this.backIconSize = 24.0,
     this.backIconSpacing = 12.0,
@@ -91,7 +92,8 @@ class TwoPaneSelectorTheme {
   }
 
   /// 创建浅色主题
-  static TwoPaneSelectorTheme light(ColorScheme colorScheme, TextTheme textTheme) {
+  static TwoPaneSelectorTheme light(
+      ColorScheme colorScheme, TextTheme textTheme) {
     return TwoPaneSelectorTheme(
       containerColor: colorScheme.surface,
       leftPanelColor: colorScheme.surface,
@@ -104,7 +106,8 @@ class TwoPaneSelectorTheme {
   }
 
   /// 创建深色主题
-  static TwoPaneSelectorTheme dark(ColorScheme colorScheme, TextTheme textTheme) {
+  static TwoPaneSelectorTheme dark(
+      ColorScheme colorScheme, TextTheme textTheme) {
     return TwoPaneSelectorTheme(
       containerColor: colorScheme.surface,
       leftPanelColor: colorScheme.surface,
@@ -137,8 +140,10 @@ class TwoPaneSelectorTheme {
     double? dividerHeight,
   }) {
     return TwoPaneSelectorTheme(
-      containerHeightFactor: containerHeightFactor ?? this.containerHeightFactor,
-      containerBorderRadius: containerBorderRadius ?? this.containerBorderRadius,
+      containerHeightFactor:
+          containerHeightFactor ?? this.containerHeightFactor,
+      containerBorderRadius:
+          containerBorderRadius ?? this.containerBorderRadius,
       containerColor: containerColor ?? this.containerColor,
       leftPanelWidthFactor: leftPanelWidthFactor ?? this.leftPanelWidthFactor,
       leftPanelColor: leftPanelColor ?? this.leftPanelColor,
@@ -212,7 +217,8 @@ class TwoPaneSelectorThemeData {
     this.leftPanelWidthFactor = 0.3,
     this.leftPanelColor,
     this.rightPanelColor,
-    this.headerPadding = const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    this.headerPadding =
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     this.titleStyle,
     this.backIconSize = 24.0,
     this.backIconSpacing = 12.0,

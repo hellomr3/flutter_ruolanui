@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ruolanui/src/widgets/select/selector_item.dart';
-import 'package:ruolanui/src/widgets/select/two_pane_selector.dart';
-import 'package:ruolanui/src/widgets/select/two_pane_selector_theme.dart';
+
+import 'selector_item.dart';
+import 'two_pane_selector.dart';
+import 'two_pane_selector_theme.dart';
 
 /// 选择模式
 enum SelectorMode { single, multiple }

@@ -303,7 +303,7 @@ class _DemoPageState extends State<DemoPage> {
   void _showSingleSelector() {
     final items = _buildCategoryData();
 
-    SelectorDialog.showSingle<CategoryItem, String>(
+    TwoPaneSelector.showSingle<CategoryItem, String>(
       context: context,
       title: '选择分类',
       items: items,
@@ -362,7 +362,7 @@ class _DemoPageState extends State<DemoPage> {
   void _showMultipleSelector() {
     final items = _buildProductData();
 
-    SelectorDialog.showMultiple<ProductItem, String>(
+    TwoPaneSelector.showMultiple<ProductItem, String>(
       context: context,
       title: '选择产品',
       items: items,
