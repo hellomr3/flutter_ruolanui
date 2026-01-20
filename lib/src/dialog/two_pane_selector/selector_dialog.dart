@@ -45,6 +45,7 @@ class SelectorDialog {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      isDismissible: false,
       builder: (context) => TwoPaneSelector<T, ID>(
         title: title,
         mode: SelectorMode.single,
@@ -90,19 +91,22 @@ class SelectorDialog {
       T item,
       bool isSelected,
     ) childItemBuilder,
-    required Widget Function(
+    Widget Function(
       BuildContext context,
       T item,
       VoidCallback onRemove,
-    ) selectedItemBuilder,
+    )? selectedItemBuilder,
     Widget? emptyState,
     T? parentAllItem,
     T? Function(ID? parentItemId)? childAllItemBuilder,
     void Function(T? selectedItem)? onItemTap,
+    int maxSelectedCount = 5,
+    VoidCallback? onMaxLimitReached,
   }) async {
     final result = await showModalBottomSheet<List<T>>(
       context: context,
       isScrollControlled: true,
+      isDismissible: false,
       backgroundColor: Colors.transparent,
       builder: (context) => TwoPaneSelector<T, ID>(
         title: title,
@@ -120,6 +124,8 @@ class SelectorDialog {
         childAllItemBuilder:
             childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
         onItemTap: onItemTap,
+        maxSelectedCount: maxSelectedCount,
+        onMaxLimitReached: onMaxLimitReached,
       ),
     );
 

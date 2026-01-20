@@ -8,10 +8,16 @@ import 'selector_item.dart';
 /// [ID] ID类型
 class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     extends ChangeNotifier {
-  TwoPaneSelectorController({this.mode = SelectorMode.single});
+  TwoPaneSelectorController({
+    this.mode = SelectorMode.single,
+    this.maxSelectedCount,
+  });
 
   /// 选择模式
   final SelectorMode mode;
+
+  /// 最大可选数量（null 表示无限制）
+  final int? maxSelectedCount;
 
   List<T> _items = [];
   ID? _selectedParentId;
@@ -99,8 +105,21 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     }
   }
 
+  /// 检查是否已达到选择上限
+  bool get isMaxLimitReached {
+    if (maxSelectedCount == null) return false;
+    return _selectedIds.length >= maxSelectedCount!;
+  }
+
+  /// 检查是否可以选中指定数量的项目
+  bool canSelect(int count) {
+    if (maxSelectedCount == null) return true;
+    return _selectedIds.length + count <= maxSelectedCount!;
+  }
+
   /// 切换项目的选中状态
-  void toggleSelection(ID itemId) {
+  /// 返回 true 表示操作成功，false 表示达到上限
+  bool toggleSelection(ID itemId) {
     final item = _items.firstWhere((i) => i.id == itemId);
     final parentId = item.pid;
 
@@ -115,16 +134,37 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
       } else {
         _selectedParentId = itemId;
       }
-    } else {
-      // 多选模式：使用父子联动逻辑
+
+      notifyListeners();
+      return true;
+    }
+
+    // 多选模式：检查是否是取消选中操作
+    if (_selectedIds.contains(itemId)) {
+      // 取消选中，总是允许
       if (parentId == null) {
         _handleParentSelection(itemId);
       } else {
         _handleChildSelection(itemId, parentId);
       }
+      notifyListeners();
+      return true;
+    }
+
+    // 新选中操作，检查是否达到上限
+    if (isMaxLimitReached) {
+      return false;
+    }
+
+    // 多选模式：使用父子联动逻辑
+    if (parentId == null) {
+      _handleParentSelection(itemId);
+    } else {
+      _handleChildSelection(itemId, parentId);
     }
 
     notifyListeners();
+    return true;
   }
 
   /// 处理父项的选择（多选模式下，选中父项 = 选中该父项下的全部）
@@ -191,33 +231,49 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   }
 
   /// 切换"全部"选项（实际上是切换父项的选中状态）
-  void toggleAllChildren(ID? parentId) {
-    if (parentId == null) return;
+  /// 返回 true 表示操作成功，false 表示达到上限
+  bool toggleAllChildren(ID? parentId) {
+    if (parentId == null) return true;
 
     if (mode == SelectorMode.single) {
       // 单选模式：清除之前的选择，只选中当前父项
       _selectedIds.clear();
       _selectedIds.add(parentId);
       _selectedParentId = parentId;
-    } else {
-      // 多选模式：切换父项的选中状态
-      if (_selectedIds.contains(parentId)) {
-        _selectedIds.remove(parentId);
-      } else {
-        final childIds =
-            _items.where((i) => i.pid == parentId).map((i) => i.id).toList();
-        _selectedIds.removeAll(childIds);
-        _selectedIds.add(parentId);
-      }
+      notifyListeners();
+      return true;
     }
 
+    // 多选模式：检查是否是取消选中操作
+    if (_selectedIds.contains(parentId)) {
+      _selectedIds.remove(parentId);
+      notifyListeners();
+      return true;
+    }
+
+    // 新选中操作，检查是否达到上限
+    if (isMaxLimitReached) {
+      return false;
+    }
+
+    final childIds =
+        _items.where((i) => i.pid == parentId).map((i) => i.id).toList();
+    _selectedIds.removeAll(childIds);
+    _selectedIds.add(parentId);
     notifyListeners();
+    return true;
   }
 
   /// 设置选中的ID集合
   void setSelectedIds(List<ID> ids) {
     _selectedIds.clear();
     _selectedIds.addAll(ids);
+    notifyListeners();
+  }
+
+  /// 清除所有选中项
+  void clearSelection() {
+    _selectedIds.clear();
     notifyListeners();
   }
 

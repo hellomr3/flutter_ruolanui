@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ruolanui/src/widgets/btn/primary_btn.dart';
-import 'package:styled_widget/styled_widget.dart';
 
 import 'selector_dialog.dart';
 import 'selector_item.dart';
 import 'two_pane_selector_controller.dart';
 import 'two_pane_selector_theme.dart';
+import 'widgets/selected_bottom_bar.dart';
 
 /// 通用的双栏选择器组件（内部使用，不对外暴露）
 /// [T] 数据类型，必须实现 SelectorItem 接口
@@ -65,6 +64,12 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
   /// 主题配置
   final TwoPaneSelectorTheme? theme;
 
+  /// 最大可选数量（多选模式，默认为5）
+  final int maxSelectedCount;
+
+  /// 达到选择上限时的回调（可选，用于外部提示"已达上限"）
+  final VoidCallback? onMaxLimitReached;
+
   // ========== 新增："全部"选项配置 ==========
 
   /// 一级"全部"选项的数据（null 表示不显示一级"全部"）
@@ -90,6 +95,8 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
     this.onBack,
     this.onItemTap,
     this.theme,
+    this.maxSelectedCount = 5,
+    this.onMaxLimitReached,
     this.parentAllItem,
     required this.childAllItemBuilder,
   });
@@ -114,7 +121,10 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
   @override
   void initState() {
     super.initState();
-    controller = TwoPaneSelectorController<T, ID>(mode: widget.mode);
+    controller = TwoPaneSelectorController<T, ID>(
+      mode: widget.mode,
+      maxSelectedCount: widget.maxSelectedCount,
+    );
 
     controller.init(
       widget.items,
@@ -136,7 +146,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
           _buildHeader(),
           Divider(height: theme.dividerHeight),
           _buildContent(),
-          if (widget.selectedItemBuilder != null) _buildBottomBar(),
+          if (widget.mode == SelectorMode.multiple) _buildBottomBar(),
         ],
       ),
     );
@@ -163,15 +173,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
                 style: theme.titleStyle ?? textTheme.titleLarge,
               ),
               const Spacer(),
-              if (widget.actionButton != null)
-                widget.actionButton!
-              else if (widget.onConfirm != null)
-                PrimaryBtn(
-                  label: theme.confirmButtonText,
-                  height: theme.confirmButtonHeight,
-                  borderRadius: theme.confirmButtonBorderRadius,
-                  onPressed: () => widget.onConfirm!(controller.selectedItems),
-                ),
+              if (widget.actionButton != null) widget.actionButton!
             ],
           ),
         );
@@ -319,7 +321,12 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
 
       // 这是普通父项下的二级"全部"
       // 单选模式：选中父项并返回；多选模式：切换父项选中状态
-      controller.toggleAllChildren(parentItemId);
+      final success = controller.toggleAllChildren(parentItemId);
+
+      if (!success) {
+        widget.onMaxLimitReached?.call();
+        return;
+      }
 
       // 单选模式下，选择后返回结果
       if (widget.mode == SelectorMode.single) {
@@ -333,7 +340,12 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
   }
 
   void _handleItemTap(T item) {
-    controller.toggleSelection(item.id);
+    final success = controller.toggleSelection(item.id);
+
+    if (!success) {
+      widget.onMaxLimitReached?.call();
+      return;
+    }
 
     // 单选模式下，选择后调用 onItemTap 返回结果
     if (widget.mode == SelectorMode.single) {
@@ -357,8 +369,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        return widget.mode == SelectorMode.multiple &&
-                controller.selectedIds.isNotEmpty
+        return controller.selectedIds.isNotEmpty
             ? _buildSelectedBottomBar()
             : const SizedBox.shrink();
       },
@@ -367,28 +378,18 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
 
   Widget _buildSelectedBottomBar() {
     final selectedItems = controller.selectedItems;
+    final selectedCount = selectedItems.length;
 
-    return Container(
-      color: theme.containerColor ?? colorScheme.surface,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width),
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: selectedItems.map((item) {
-              return widget.selectedItemBuilder!(
-                context,
-                item,
-                () => controller.toggleSelection(item.id),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    ).paddingDirectional(
-      bottom: MediaQuery.paddingOf(context).bottom,
-      top: theme.bottomBarTopPadding,
+    return SelectedBottomBar<T, ID>(
+      selectedCount: selectedCount,
+      maxSelectedCount: widget.maxSelectedCount,
+      selectedItemBuilder: widget.selectedItemBuilder,
+      selectedItems: selectedItems,
+      onRemove: (itemId) => controller.toggleSelection(itemId),
+      onClear: () => controller.clearSelection(),
+      onConfirm: () => widget.onConfirm!(selectedItems),
+      bottomPadding: MediaQuery.paddingOf(context).bottom,
+      topPadding: theme.bottomBarTopPadding,
     );
   }
 
