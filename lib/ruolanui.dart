@@ -18,9 +18,7 @@ export 'src/widgets/container/keyboard/keyboard_dismiss.dart';
 export 'src/widgets/multiline_text_editor_page/multiline_text_editor_page.dart';
 export 'src/widgets/select/selector_dialog.dart';
 export 'src/widgets/select/selector_item.dart';
-export 'src/widgets/select/two_pane_selector.dart';
 export 'src/widgets/select/two_pane_selector_adapter.dart';
-export 'src/widgets/select/two_pane_selector_controller.dart';
 export 'src/widgets/select/two_pane_selector_theme.dart';
 
 // widgets

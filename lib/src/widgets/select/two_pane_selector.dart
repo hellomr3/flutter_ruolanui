@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ruolanui/ruolanui.dart';
+import 'package:ruolanui/src/widgets/select/selector_dialog.dart';
 import 'package:ruolanui/src/widgets/select/selector_item.dart';
+import 'package:ruolanui/src/widgets/select/two_pane_selector_controller.dart';
+import 'package:ruolanui/src/widgets/select/two_pane_selector_theme.dart';
 import 'package:styled_widget/styled_widget.dart';
 
-/// 选择模式
-enum SelectorMode { single, multiple }
-
-/// 通用的双栏选择器组件
+/// 通用的双栏选择器组件（内部使用，不对外暴露）
 /// [T] 数据类型，必须实现 SelectorItem 接口
 /// [ID] ID类型
 class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
@@ -98,20 +97,14 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
       TwoPaneSelectorState<T, ID>();
 }
 
-/// TwoPaneSelector 的状态类，公开以支持外部访问 ViewModel
+/// TwoPaneSelector 的状态类
 class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     extends State<TwoPaneSelector<T, ID>> {
   late final TwoPaneSelectorController<T, ID> controller;
 
-  ColorScheme get colorScheme =>
-      Theme
-          .of(context)
-          .colorScheme;
+  ColorScheme get colorScheme => Theme.of(context).colorScheme;
 
-  TextTheme get textTheme =>
-      Theme
-          .of(context)
-          .textTheme;
+  TextTheme get textTheme => Theme.of(context).textTheme;
 
   /// 获取主题配置，如果没有提供则使用默认主题
   TwoPaneSelectorTheme get theme =>
@@ -120,9 +113,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
   @override
   void initState() {
     super.initState();
-    print('=== TwoPaneSelector initState ===');
-    print('initialSelectedIds: ${widget.initialSelectedIds}');
-    controller = TwoPaneSelectorController<T, ID>();
+    controller = TwoPaneSelectorController<T, ID>(mode: widget.mode);
 
     controller.init(
       widget.items,
@@ -317,12 +308,6 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
 
   /// 处理二级"全部"选项的点击
   void _handleChildAllItemTap(T childAllItem, ID parentItemId) {
-    print('=== _handleChildAllItemTap ===');
-    print('childAllItem: $childAllItem, id: ${childAllItem.id}');
-    print('parentItemId: $parentItemId');
-    print(
-        'childAllItem.id == parentItemId: ${childAllItem.id == parentItemId}');
-
     // 切换显示到该父项
     controller.selectParent(parentItemId);
 
@@ -333,51 +318,35 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
           ? widget.parentAllItem!.id
           : null;
       final isGlobalAll = parentAllId != null && parentItemId == parentAllId;
-      print('这是全部项, parentAllId: $parentAllId, isGlobalAll: $isGlobalAll');
-
-      T? returnValue;
 
       if (isGlobalAll) {
         // 这是一级"全部"下的二级"全部"，返回空数据
-        returnValue = null;
-        print('是一级全部下的二级全部，返回 null');
-      } else {
-        // 这是普通父项下的二级"全部"
-        // 单选模式：直接返回父项数据
-        if (widget.mode == SelectorMode.single) {
-          print('单选模式：直接返回父项');
-          // 直接从 items 中找到父项并返回
-          returnValue = widget.items.firstWhere((i) => i.id == parentItemId);
-        } else {
-          // 多选模式：切换父项的选中状态
-          print('多选模式：调用 toggleAllChildren');
-          controller.toggleAllChildren(parentItemId);
-          returnValue = controller.selectedItem;
-        }
-        print('selectedItem: $returnValue');
+        widget.onItemTap?.call(null);
+        return;
       }
 
-      // 点击时回调外部方法
-      print('调用 onItemTap, returnValue: $returnValue');
-      widget.onItemTap?.call(returnValue);
+      // 这是普通父项下的二级"全部"
+      // 单选模式：选中父项并返回；多选模式：切换父项选中状态
+      controller.toggleAllChildren(parentItemId);
+
+      // 单选模式下，选择后返回结果
+      if (widget.mode == SelectorMode.single) {
+        widget.onItemTap?.call(controller.selectedItem);
+      }
       return;
     }
 
     // 正常子项：使用常规的选中逻辑
-    print('不是全部项，使用常规选中逻辑');
     _handleItemTap(childAllItem);
   }
 
   void _handleItemTap(T item) {
-    print('=== _handleItemTap ===');
-    print('item: $item, id: ${item.id}');
-    // 单选模式下，选择后调用 onItemTap，由外部处理返回逻辑（关闭弹窗等）
-    if (widget.mode == SelectorMode.single) {
-      widget.onItemTap?.call(item);
-      return;
-    }
     controller.toggleSelection(item.id);
 
+    // 单选模式下，选择后调用 onItemTap 返回结果
+    if (widget.mode == SelectorMode.single) {
+      widget.onItemTap?.call(controller.selectedItem);
+    }
   }
 
   Widget _defaultEmptyState() {

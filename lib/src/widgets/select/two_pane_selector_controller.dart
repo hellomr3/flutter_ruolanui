@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart';
+import 'package:ruolanui/src/widgets/select/selector_dialog.dart';
 import 'package:ruolanui/src/widgets/select/selector_item.dart';
 
-/// 通用的双栏选择器控制器
+/// 通用的双栏选择器控制器（内部使用）
 /// [T] 数据类型，必须实现 SelectorItem 接口
 /// [ID] ID类型
 class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     extends ChangeNotifier {
-  TwoPaneSelectorController();
+  TwoPaneSelectorController({this.mode = SelectorMode.single});
+
+  /// 选择模式
+  final SelectorMode mode;
 
   List<T> _items = [];
   ID? _selectedParentId;
@@ -31,15 +35,6 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     return _items.where((i) => i.parentId == _selectedParentId).toList();
   }
 
-  /// 获取虚拟"全部"项（用于内部判断）
-  T? getVirtualAllItem() {
-    if (_selectedParentId == null) return null;
-    return _items.firstWhere(
-      (i) => i.id == _selectedParentId && i.parentId == null,
-      orElse: () => _items.first,
-    );
-  }
-
   /// 选中的项目列表（用于底部展示）
   /// 多选模式：返回所有选中的项（父项和子项）
   /// 如果父项被选中，只返回父项；如果是部分子项被选中，返回子项
@@ -57,31 +52,20 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   T? get selectedItem {
     if (_selectedIds.isEmpty) return null;
     final id = _selectedIds.first;
-    print('=== get selectedItem ===');
-    print('_selectedIds: $_selectedIds');
-    print('first id: $id');
-    final item = _items.firstWhere(
+    return _items.firstWhere(
       (i) => i.id == id,
       orElse: () => _items.first,
     );
-    print('found item: $item');
-    return item;
   }
 
   /// 初始化数据
   void init(List<T> data, {List<ID>? selectedIds}) {
-    print('=== controller.init ===');
-    print('data: $data');
-    print('selectedIds: $selectedIds');
-
     _items = data;
 
     _selectedIds.clear();
     if (selectedIds != null) {
       _selectedIds.addAll(selectedIds);
     }
-
-    print('init 后 _selectedIds: $_selectedIds');
 
     if (_selectedIds.isNotEmpty) {
       // 取第一个选中项
@@ -105,7 +89,6 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
           parentItems.isEmpty ? null : parentItems.first.id;
     }
 
-    print('init 后 _selectedParentId: $_selectedParentId');
     notifyListeners();
   }
 
@@ -119,20 +102,29 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
 
   /// 切换项目的选中状态
   void toggleSelection(ID itemId) {
-    print('=== toggleSelection ===');
-    print('itemId: $itemId');
-
     final item = _items.firstWhere((i) => i.id == itemId);
-    print('found item: $item, parentId: ${item.parentId}');
     final parentId = item.parentId;
 
-    if (parentId == null) {
-      _handleParentSelection(itemId);
+    if (mode == SelectorMode.single) {
+      // 单选模式：清除之前的选择，只保留当前选择
+      _selectedIds.clear();
+      _selectedIds.add(itemId);
+
+      // 更新选中的父项
+      if (parentId != null) {
+        _selectedParentId = parentId;
+      } else {
+        _selectedParentId = itemId;
+      }
     } else {
-      _handleChildSelection(itemId, parentId);
+      // 多选模式：使用父子联动逻辑
+      if (parentId == null) {
+        _handleParentSelection(itemId);
+      } else {
+        _handleChildSelection(itemId, parentId);
+      }
     }
 
-    print('toggleSelection 后 _selectedIds: $_selectedIds');
     notifyListeners();
   }
 
@@ -208,29 +200,27 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
 
   /// 切换"全部"选项（实际上是切换父项的选中状态）
   void toggleAllChildren(ID? parentId) {
-    print('=== toggleAllChildren ===');
-    print('parentId: $parentId');
-    print('操作前 _selectedIds: $_selectedIds');
-
     if (parentId == null) return;
 
-    if (_selectedIds.contains(parentId)) {
-      // 如果父项被选中，取消选中
-      _selectedIds.remove(parentId);
-      print('取消选中父项');
-    } else {
-      // 否则，选中父项，并清除所有子项
-      final childIds = _items
-          .where((i) => i.parentId == parentId)
-          .map((i) => i.id)
-          .toList();
-      print('找到的子项: $childIds');
-      _selectedIds.removeAll(childIds);
+    if (mode == SelectorMode.single) {
+      // 单选模式：清除之前的选择，只选中当前父项
+      _selectedIds.clear();
       _selectedIds.add(parentId);
-      print('选中父项，清除子项');
+      _selectedParentId = parentId;
+    } else {
+      // 多选模式：切换父项的选中状态
+      if (_selectedIds.contains(parentId)) {
+        _selectedIds.remove(parentId);
+      } else {
+        final childIds = _items
+            .where((i) => i.parentId == parentId)
+            .map((i) => i.id)
+            .toList();
+        _selectedIds.removeAll(childIds);
+        _selectedIds.add(parentId);
+      }
     }
 
-    print('操作后 _selectedIds: $_selectedIds');
     notifyListeners();
   }
 
@@ -238,18 +228,6 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   void setSelectedIds(List<ID> ids) {
     _selectedIds.clear();
     _selectedIds.addAll(ids);
-    notifyListeners();
-  }
-
-  /// 只选中父项（清除其下所有子项的选中状态）
-  void selectParentOnly(ID parentId) {
-    final childIds = _items
-        .where((i) => i.parentId == parentId)
-        .map((i) => i.id)
-        .toList();
-
-    _selectedIds.removeAll(childIds);
-    _selectedIds.add(parentId);
     notifyListeners();
   }
 
