@@ -13,7 +13,7 @@ class _DemoPageState extends State<DemoPage> {
   final _textFieldController = TextEditingController();
   final _clearInputController = TextEditingController();
   String? _selectedOption;
-  String? _selectedCategory;
+  CategoryItem? _selectedCategory;
   final Set<String> _selectedItems = {};
 
   @override
@@ -303,56 +303,66 @@ class _DemoPageState extends State<DemoPage> {
   void _showSingleSelector() {
     final items = _buildCategoryData();
 
-    TwoPaneSelector.showSingle<CategoryItem, String>(
+    SelectorDialog.showSingle<CategoryItem, String>(
       context: context,
       title: '选择分类',
       items: items,
-      idExtractor: (item) => item.id,
-      parentIdExtractor: (item) => item.pid,
-      initialSelectedId: _selectedCategory,
-      parentItemBuilder: (context, item, isSelected, hasSelectedItems, onTap) {
+      initialSelectedId: _selectedCategory?.id,
+      // 配置二级"全部"选项
+      childAllItemBuilder: (String? pid) {
+        if (pid == null) return null;
+        return CategoryItem(id: pid, name: '全部');
+      },
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
         final theme = Theme.of(context);
-        return ListTile(
-          leading: Icon(
-            isSelected ? Icons.folder_open : Icons.folder,
-            color: isSelected ? theme.colorScheme.primary : null,
+        return Container(
+          color: isSelected ? theme.colorScheme.primaryContainer : null,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.folder_open : Icons.folder,
+                color: isSelected ? theme.colorScheme.primary : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                item.name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isSelected ? theme.colorScheme.primary : null,
+                  fontWeight: isSelected ? FontWeight.bold : null,
+                ),
+              ),
+            ],
           ),
-          title: Text(
-            item.name,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: isSelected ? theme.colorScheme.primary : null,
-              fontWeight: isSelected ? FontWeight.bold : null,
-            ),
-          ),
-          onTap: onTap,
         );
       },
-      childItemBuilder: (context, item, isSelected, onTap) {
+      childItemBuilder: (context, item, isSelected) {
         final theme = Theme.of(context);
-        return ListTile(
-          leading: Icon(
-            isSelected ? Icons.check_circle : Icons.circle_outlined,
-            color: isSelected ? theme.colorScheme.primary : null,
+        return Container(
+          color: isSelected
+              ? theme.colorScheme.primaryContainer.withOpacity(0.5)
+              : null,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle : Icons.circle_outlined,
+                color: isSelected ? theme.colorScheme.primary : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                item.name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isSelected ? theme.colorScheme.primary : null,
+                ),
+              ),
+            ],
           ),
-          title: Text(
-            item.name,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: isSelected ? theme.colorScheme.primary : null,
-            ),
-          ),
-          onTap: onTap,
-        );
-      },
-      selectedItemBuilder: (context, item, onRemove) {
-        return Chip(
-          label: Text(item.name),
-          onDeleted: onRemove,
-          avatar: const Icon(Icons.check_circle, size: 18),
         );
       },
     ).then((selected) {
       if (selected != null) {
-        setState(() => _selectedCategory = selected.id);
+        setState(() => _selectedCategory = selected);
         _showSnackbar('选择了: ${selected.name}');
       }
     });
@@ -362,48 +372,86 @@ class _DemoPageState extends State<DemoPage> {
   void _showMultipleSelector() {
     final items = _buildProductData();
 
-    TwoPaneSelector.showMultiple<ProductItem, String>(
+    SelectorDialog.showMultiple<ProductItem, String>(
       context: context,
       title: '选择产品',
       items: items,
-      idExtractor: (item) => item.id,
-      parentIdExtractor: (item) => item.categoryId,
-      parentItemBuilder: (context, item, isSelected, hasSelectedItems, onTap) {
-        final theme = Theme.of(context);
-        return ListTile(
-          leading: Badge(
-            label: Text(item.childCount.toString()),
-            child: Icon(
-              Icons.category,
-              color: isSelected ? theme.colorScheme.primary : null,
-            ),
-          ),
-          title: Text(
-            item.name,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          onTap: onTap,
+      maxSelectedCount: 3,
+      onMaxLimitReached: () {
+        _showSnackbar('已达到最大选择数量');
+      },
+      // 不传 selectedItemBuilder，使用默认样式
+      // 配置二级"全部"选项
+      childAllItemBuilder: (String? pid) {
+        if (pid == null) return null;
+        return ProductItem(
+          id: pid,
+          name: '全部',
+          categoryId: pid,
+          childCount: 0,
+          price: 0,
         );
       },
-      childItemBuilder: (context, item, isSelected, onTap) {
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
         final theme = Theme.of(context);
-        return CheckboxListTile(
-          value: isSelected,
-          onChanged: (_) => onTap(),
-          title: Text(item.name),
-          subtitle: Text('¥${item.price.toStringAsFixed(2)}'),
-          secondary: Icon(
-            isSelected ? Icons.check_circle : Icons.circle_outlined,
-            color: isSelected ? theme.colorScheme.primary : null,
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
+                color:
+                    isSelected ? theme.colorScheme.primary : Colors.transparent,
+                width: 4,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Badge(
+                label: Text(item.childCount.toString()),
+                child: Icon(
+                  Icons.category,
+                  color: isSelected ? theme.colorScheme.primary : null,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                item.name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         );
       },
-      selectedItemBuilder: (context, item, onRemove) {
-        return Chip(
-          label: Text(item.name),
-          onDeleted: onRemove,
+      childItemBuilder: (context, item, isSelected) {
+        final theme = Theme.of(context);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle : Icons.circle_outlined,
+                color: isSelected ? theme.colorScheme.primary : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.name),
+                    Text(
+                      '¥${item.price.toStringAsFixed(2)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         );
       },
     ).then((selected) {
@@ -419,194 +467,162 @@ class _DemoPageState extends State<DemoPage> {
   void _showSelectorWithSelectAll() {
     final items = _buildCityData();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('选择城市'),
+    SelectorDialog.showMultiple<CityItem, String>(
+      context: context,
+      title: '选择城市',
+      items: items,
+      maxSelectedCount: 5,
+      onMaxLimitReached: () {
+        _showSnackbar('已达到最大选择数量');
+      },
+      // 配置二级"全部"选项
+      childAllItemBuilder: (String? pid) {
+        if (pid == null) return null;
+        return CityItem(id: pid, name: '全部');
+      },
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+        final theme = Theme.of(context);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primaryContainer : null,
           ),
-          body: TwoPaneSelector<CityItem, String>(
-            title: '选择城市',
-            mode: SelectorMode.multiple,
-            items: items,
-            idExtractor: (item) => item.id,
-            parentIdExtractor: (item) => item.pid,
-            parentItemBuilder:
-                (context, item, isSelected, hasSelectedItems, onTap) {
-              final theme = Theme.of(context);
-              return ListTile(
-                leading: Icon(
-                  isSelected
-                      ? Icons.location_city
-                      : Icons.location_city_outlined,
-                  color: isSelected ? theme.colorScheme.primary : null,
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.location_city : Icons.location_city_outlined,
+                color: isSelected ? theme.colorScheme.primary : null,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                item.name,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                title: Text(
-                  item.name,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onTap: onTap,
-              );
-            },
-            childItemBuilder: (context, item, isSelected, onTap) {
-              final theme = Theme.of(context);
-              return CheckboxListTile(
-                value: isSelected,
-                onChanged: (_) => onTap(),
-                title: Text(item.name),
-                secondary: Icon(
-                  isSelected ? Icons.check_circle : Icons.circle_outlined,
-                  color: isSelected ? theme.colorScheme.primary : null,
-                ),
-              );
-            },
-            selectedItemBuilder: (context, item, onRemove) {
-              return Chip(
-                label: Text(item.name),
-                onDeleted: onRemove,
-              );
-            },
-            onBack: () => Navigator.pop(context),
-            onConfirm: (selected) {
-              setState(() => _selectedItems.clear());
-              setState(
-                  () => _selectedItems.addAll(selected.map((e) => e.name)));
-              Navigator.pop(context);
-              _showSnackbar('已选择 ${selected.length} 个城市');
-            },
-            childAllItemBuilder: (String? parentItemId) {
-              return CityItem(id: parentItemId ?? "", name: "全部");
-            },
+              ),
+            ],
           ),
-        ),
-      ),
-    );
+        );
+      },
+      childItemBuilder: (context, item, isSelected) {
+        final theme = Theme.of(context);
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle : Icons.circle_outlined,
+                color: isSelected ? theme.colorScheme.primary : null,
+              ),
+              const SizedBox(width: 12),
+              Text(item.name),
+            ],
+          ),
+        );
+      },
+    ).then((selected) {
+      if (selected.isNotEmpty) {
+        setState(() => _selectedItems.clear());
+        setState(() => _selectedItems.addAll(selected.map((e) => e.name)));
+        _showSnackbar('已选择 ${selected.length} 个城市');
+      }
+    });
   }
 
   /// 自定义主题的选择器
   void _showSelectorWithTheme() {
     final items = _buildCategoryData();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: const Text('自定义主题'),
-            backgroundColor: Colors.deepPurple,
-            foregroundColor: Colors.white,
-          ),
-          body: TwoPaneSelector<CategoryItem, String>(
-            title: '选择分类',
-            mode: SelectorMode.single,
-            items: items,
-            idExtractor: (item) => item.id,
-            parentIdExtractor: (item) => item.pid,
-            childAllItemBuilder: (String? parentItemId) {
-              return CategoryItem(id: parentItemId ?? "", name: "全部");
-            },
-            parentItemBuilder:
-                (context, item, isSelected, hasSelectedItems, onTap) {
-              return GestureDetector(
-                onTap: onTap,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFEDE7F6) : null,
-                    border: Border(
-                      left: BorderSide(
-                        color:
-                            isSelected ? Colors.deepPurple : Colors.transparent,
-                        width: 4,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.folder,
-                        color: isSelected ? Colors.deepPurple : Colors.grey,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        item.name,
-                        style: TextStyle(
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                          color:
-                              isSelected ? Colors.deepPurple : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-            childItemBuilder: (context, item, isSelected, onTap) {
-              return GestureDetector(
-                onTap: onTap,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isSelected ? Icons.check_circle : Icons.circle_outlined,
-                        color: isSelected ? Colors.deepPurple : Colors.grey,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          item.name,
-                          style: TextStyle(
-                            color:
-                                isSelected ? Colors.deepPurple : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-            selectedItemBuilder: (context, item, onRemove) {
-              return Chip(
-                label: Text(item.name),
-                backgroundColor: Colors.deepPurple,
-                labelStyle: const TextStyle(color: Colors.white),
-                deleteIconColor: Colors.white,
-                onDeleted: onRemove,
-              );
-            },
-            onBack: () => Navigator.pop(context),
-            onItemTap: (selected) {
-              if (selected != null) {
-                setState(() => _selectedCategory = selected.id);
-                Navigator.pop(context);
-                _showSnackbar('选择了: ${selected.name}');
-              }
-            },
-          ),
+    SelectorDialog.showSingle<CategoryItem, String>(
+      context: context,
+      title: '选择分类',
+      items: items,
+      initialSelectedId: _selectedCategory?.id,
+      theme: TwoPaneSelectorTheme(
+        containerColor: const Color(0xFFF5F5F5),
+        leftPanelColor: const Color(0xFFEDE7F6),
+        rightPanelColor: const Color(0xFFF5F5F5),
+        titleStyle: const TextStyle(
+          color: Colors.deepPurple,
+          fontWeight: FontWeight.bold,
         ),
       ),
-    );
+      // 配置二级"全部"选项
+      childAllItemBuilder: (String? pid) {
+        if (pid == null) return null;
+        return CategoryItem(id: pid, name: '全部');
+      },
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFD1C4E9) : null,
+            border: Border(
+              left: BorderSide(
+                color: isSelected ? Colors.deepPurple : Colors.transparent,
+                width: 4,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.folder,
+                color: isSelected ? Colors.deepPurple : Colors.grey,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                item.name,
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.deepPurple : Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      childItemBuilder: (context, item, isSelected) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                isSelected ? Icons.check_circle : Icons.circle_outlined,
+                color: isSelected ? Colors.deepPurple : Colors.grey,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  item.name,
+                  style: TextStyle(
+                    color: isSelected ? Colors.deepPurple : Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ).then((selected) {
+      if (selected != null) {
+        setState(() => _selectedCategory = selected);
+        _showSnackbar('选择了: ${selected.name}');
+      }
+    });
   }
 
   /// 构建分类数据
   List<CategoryItem> _buildCategoryData() {
     return [
-      CategoryItem(id: 'electronics', name: '电子产品', parentId: null),
-      CategoryItem(id: 'phone', name: '手机', parentId: 'electronics'),
-      CategoryItem(id: 'laptop', name: '笔记本', parentId: 'electronics'),
-      CategoryItem(id: 'tablet', name: '平板', parentId: 'electronics'),
-      CategoryItem(id: 'clothing', name: '服装', parentId: null),
-      CategoryItem(id: 'men', name: '男装', parentId: 'clothing'),
-      CategoryItem(id: 'women', name: '女装', parentId: 'clothing'),
-      CategoryItem(id: 'kids', name: '童装', parentId: 'clothing'),
+      CategoryItem(id: 'electronics', name: '电子产品'),
+      CategoryItem(id: 'phone', name: '手机', pid: 'electronics'),
+      CategoryItem(id: 'laptop', name: '笔记本', pid: 'electronics'),
+      CategoryItem(id: 'tablet', name: '平板', pid: 'electronics'),
+      CategoryItem(id: 'clothing', name: '服装'),
+      CategoryItem(id: 'men', name: '男装', pid: 'clothing'),
+      CategoryItem(id: 'women', name: '女装', pid: 'clothing'),
+      CategoryItem(id: 'kids', name: '童装', pid: 'clothing'),
     ];
   }
 
@@ -614,51 +630,39 @@ class _DemoPageState extends State<DemoPage> {
   List<ProductItem> _buildProductData() {
     return [
       ProductItem(
-          id: 'electronics',
-          name: '电子产品',
-          categoryId: null,
-          childCount: 3,
-          price: 0),
+          id: 'electronics', name: '电子产品', pid: null, childCount: 3, price: 0),
       ProductItem(
           id: 'phone1',
           name: 'iPhone 15',
-          categoryId: 'electronics',
+          pid: 'electronics',
           childCount: 0,
           price: 5999),
       ProductItem(
           id: 'phone2',
           name: '华为 Mate 60',
-          categoryId: 'electronics',
+          pid: 'electronics',
           childCount: 0,
           price: 5499),
       ProductItem(
           id: 'phone3',
           name: '小米 14',
-          categoryId: 'electronics',
+          pid: 'electronics',
           childCount: 0,
           price: 3999),
       ProductItem(
-          id: 'clothing',
-          name: '服装',
-          categoryId: null,
-          childCount: 3,
-          price: 0),
+          id: 'clothing', name: '服装', pid: null, childCount: 3, price: 0),
       ProductItem(
           id: 'cloth1',
           name: '羽绒服',
-          categoryId: 'clothing',
+          pid: 'clothing',
           childCount: 0,
           price: 599),
       ProductItem(
-          id: 'cloth2',
-          name: '毛衣',
-          categoryId: 'clothing',
-          childCount: 0,
-          price: 299),
+          id: 'cloth2', name: '毛衣', pid: 'clothing', childCount: 0, price: 299),
       ProductItem(
           id: 'cloth3',
           name: '牛仔裤',
-          categoryId: 'clothing',
+          pid: 'clothing',
           childCount: 0,
           price: 199),
     ];
@@ -667,14 +671,14 @@ class _DemoPageState extends State<DemoPage> {
   /// 构建城市数据
   List<CityItem> _buildCityData() {
     return [
-      CityItem(id: 'east', name: '华东地区', parentId: null),
-      CityItem(id: 'shanghai', name: '上海', parentId: 'east'),
-      CityItem(id: 'hangzhou', name: '杭州', parentId: 'east'),
-      CityItem(id: 'nanjing', name: '南京', parentId: 'east'),
-      CityItem(id: 'north', name: '华北地区', parentId: null),
-      CityItem(id: 'beijing', name: '北京', parentId: 'north'),
-      CityItem(id: 'tianjin', name: '天津', parentId: 'north'),
-      CityItem(id: 'shijiazhuang', name: '石家庄', parentId: 'north'),
+      CityItem(id: 'east', name: '华东地区'),
+      CityItem(id: 'shanghai', name: '上海', pid: 'east'),
+      CityItem(id: 'hangzhou', name: '杭州', pid: 'east'),
+      CityItem(id: 'nanjing', name: '南京', pid: 'east'),
+      CityItem(id: 'north', name: '华北地区'),
+      CityItem(id: 'beijing', name: '北京', pid: 'north'),
+      CityItem(id: 'tianjin', name: '天津', pid: 'north'),
+      CityItem(id: 'shijiazhuang', name: '石家庄', pid: 'north'),
     ];
   }
 
@@ -795,38 +799,48 @@ class _DemoPageState extends State<DemoPage> {
 }
 
 /// 分类数据项
-class CategoryItem {
+class CategoryItem implements SelectorItem<String> {
+  @override
   final String id;
+  @override
   final String name;
-  final String? parentId;
+  @override
+  final String? pid;
 
-  CategoryItem({required this.id, required this.name, this.parentId});
+  CategoryItem({required this.id, required this.name, this.pid});
 }
 
 /// 产品数据项
-class ProductItem {
+class ProductItem implements SelectorItem<String> {
+  @override
   final String id;
+  @override
   final String name;
-  final String? categoryId;
+  @override
+  final String? pid;
   final int childCount;
   final double price;
 
   ProductItem({
     required this.id,
     required this.name,
-    this.categoryId,
+    String? categoryId,
+    this.pid,
     required this.childCount,
     required this.price,
   });
 }
 
 /// 城市数据项
-class CityItem {
+class CityItem implements SelectorItem<String> {
+  @override
   final String id;
+  @override
   final String name;
-  final String? parentId;
+  @override
+  final String? pid;
 
-  CityItem({required this.id, required this.name, this.parentId});
+  CityItem({required this.id, required this.name, this.pid});
 }
 
 /// 选择器按钮组件
