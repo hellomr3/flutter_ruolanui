@@ -1,19 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:ruolanui/src/widgets/select/selector_item.dart';
 
 /// 通用的双栏选择器控制器
-/// [T] 数据类型
+/// [T] 数据类型，必须实现 SelectorItem 接口
 /// [ID] ID类型
-class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
-  /// 数据ID提取器
-  final ID Function(T item) idExtractor;
-
-  /// 父ID提取器
-  final ID? Function(T item) parentIdExtractor;
-
-  TwoPaneSelectorController({
-    required this.idExtractor,
-    required this.parentIdExtractor,
-  });
+class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
+    extends ChangeNotifier {
+  TwoPaneSelectorController();
 
   List<T> _items = [];
   ID? _selectedParentId;
@@ -30,19 +23,19 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
 
   /// 父项列表
   List<T> get parentItems =>
-      _items.where((i) => parentIdExtractor(i) == null).toList();
+      _items.where((i) => i.parentId == null).toList();
 
   /// 子项列表（包含虚拟"全部"项）
   List<T> get childItems {
     if (_selectedParentId == null) return [];
-    return _items.where((i) => parentIdExtractor(i) == _selectedParentId).toList();
+    return _items.where((i) => i.parentId == _selectedParentId).toList();
   }
 
   /// 获取虚拟"全部"项（用于内部判断）
   T? getVirtualAllItem() {
     if (_selectedParentId == null) return null;
     return _items.firstWhere(
-      (i) => idExtractor(i) == _selectedParentId && parentIdExtractor(i) == null,
+      (i) => i.id == _selectedParentId && i.parentId == null,
       orElse: () => _items.first,
     );
   }
@@ -53,8 +46,7 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
   List<T> get selectedItems {
     final result = <T>[];
     for (final item in _items) {
-      final id = idExtractor(item);
-      if (_selectedIds.contains(id)) {
+      if (_selectedIds.contains(item.id)) {
         result.add(item);
       }
     }
@@ -65,14 +57,23 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
   T? get selectedItem {
     if (_selectedIds.isEmpty) return null;
     final id = _selectedIds.first;
-    return _items.firstWhere(
-      (i) => idExtractor(i) == id,
+    print('=== get selectedItem ===');
+    print('_selectedIds: $_selectedIds');
+    print('first id: $id');
+    final item = _items.firstWhere(
+      (i) => i.id == id,
       orElse: () => _items.first,
     );
+    print('found item: $item');
+    return item;
   }
 
   /// 初始化数据
-  void init(List<T> data, {ID? initialParentId, List<ID>? selectedIds}) {
+  void init(List<T> data, {List<ID>? selectedIds}) {
+    print('=== controller.init ===');
+    print('data: $data');
+    print('selectedIds: $selectedIds');
+
     _items = data;
 
     _selectedIds.clear();
@@ -80,15 +81,16 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
       _selectedIds.addAll(selectedIds);
     }
 
-    if (initialParentId != null) {
-      _selectedParentId = initialParentId;
-    } else if (_selectedIds.isNotEmpty) {
-      // 如果没有提供 initialParentId，但有选中的项目
-      // 则自动将 _selectedParentId 设置为第一个选中项的父级ID
+    print('init 后 _selectedIds: $_selectedIds');
+
+    if (_selectedIds.isNotEmpty) {
+      // 取第一个选中项
       final firstSelectedId = _selectedIds.first;
-      final firstSelectedItem =
-          _items.firstWhere((i) => idExtractor(i) == firstSelectedId, orElse: () => _items.first);
-      final parentId = parentIdExtractor(firstSelectedItem);
+      final firstSelectedItem = _items.firstWhere(
+        (i) => i.id == firstSelectedId,
+        orElse: () => _items.first,
+      );
+      final parentId = firstSelectedItem.parentId;
 
       if (parentId != null) {
         // 如果是子项，选中其父级
@@ -98,11 +100,12 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
         _selectedParentId = firstSelectedId;
       }
     } else {
-      // 如果既没有提供 initialParentId，也没有选中项
-      // 则保持 _selectedParentId 为 null（将由 TwoPaneSelector 处理）
-      _selectedParentId = null;
+      // 默认选中左侧第一个父项
+      _selectedParentId =
+          parentItems.isEmpty ? null : parentItems.first.id;
     }
 
+    print('init 后 _selectedParentId: $_selectedParentId');
     notifyListeners();
   }
 
@@ -116,8 +119,12 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
 
   /// 切换项目的选中状态
   void toggleSelection(ID itemId) {
-    final item = _items.firstWhere((i) => idExtractor(i) == itemId);
-    final parentId = parentIdExtractor(item);
+    print('=== toggleSelection ===');
+    print('itemId: $itemId');
+
+    final item = _items.firstWhere((i) => i.id == itemId);
+    print('found item: $item, parentId: ${item.parentId}');
+    final parentId = item.parentId;
 
     if (parentId == null) {
       _handleParentSelection(itemId);
@@ -125,6 +132,7 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
       _handleChildSelection(itemId, parentId);
     }
 
+    print('toggleSelection 后 _selectedIds: $_selectedIds');
     notifyListeners();
   }
 
@@ -136,8 +144,8 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
     } else {
       // 选中父项，清除该父项下的所有子项选中状态
       final childIds = _items
-          .where((i) => parentIdExtractor(i) == parentId)
-          .map(idExtractor)
+          .where((i) => i.parentId == parentId)
+          .map((i) => i.id)
           .toList();
       _selectedIds.removeAll(childIds);
       _selectedIds.add(parentId);
@@ -157,12 +165,13 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
 
     // 获取所有子项
     final childIds = _items
-        .where((i) => parentIdExtractor(i) == parentId)
-        .map(idExtractor)
+        .where((i) => i.parentId == parentId)
+        .map((i) => i.id)
         .toList();
 
     // 检查是否所有子项都被选中
-    if (childIds.isNotEmpty && childIds.every((id) => _selectedIds.contains(id))) {
+    if (childIds.isNotEmpty &&
+        childIds.every((id) => _selectedIds.contains(id))) {
       // 全部选中时，移除所有子项，只保留父项
       _selectedIds.removeAll(childIds);
       _selectedIds.add(parentId);
@@ -171,10 +180,10 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
 
   /// 检查父项下是否有被选中的子项
   bool hasSelectedChildren(T parentItem) {
-    final parentId = idExtractor(parentItem);
+    final parentId = parentItem.id;
     return _selectedIds.any((id) =>
         id == parentId ||
-        _items.any((i) => idExtractor(i) == id && parentIdExtractor(i) == parentId));
+        _items.any((i) => i.id == id && i.parentId == parentId));
   }
 
   /// 检查父项是否被选中（表示选中了该父项下的全部）
@@ -188,28 +197,40 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
     if (parentId == null) return false;
     // 如果父项被选中，表示全部被选中
     if (_selectedIds.contains(parentId)) return true;
-    
-    final childIds =
-        _items.where((i) => parentIdExtractor(i) == parentId).map(idExtractor).toList();
+
+    final childIds = _items
+        .where((i) => i.parentId == parentId)
+        .map((i) => i.id)
+        .toList();
     if (childIds.isEmpty) return false;
     return childIds.every((id) => _selectedIds.contains(id));
   }
 
   /// 切换"全部"选项（实际上是切换父项的选中状态）
   void toggleAllChildren(ID? parentId) {
+    print('=== toggleAllChildren ===');
+    print('parentId: $parentId');
+    print('操作前 _selectedIds: $_selectedIds');
+
     if (parentId == null) return;
 
     if (_selectedIds.contains(parentId)) {
       // 如果父项被选中，取消选中
       _selectedIds.remove(parentId);
+      print('取消选中父项');
     } else {
       // 否则，选中父项，并清除所有子项
-      final childIds =
-          _items.where((i) => parentIdExtractor(i) == parentId).map(idExtractor).toList();
+      final childIds = _items
+          .where((i) => i.parentId == parentId)
+          .map((i) => i.id)
+          .toList();
+      print('找到的子项: $childIds');
       _selectedIds.removeAll(childIds);
       _selectedIds.add(parentId);
+      print('选中父项，清除子项');
     }
 
+    print('操作后 _selectedIds: $_selectedIds');
     notifyListeners();
   }
 
@@ -223,8 +244,8 @@ class TwoPaneSelectorController<T, ID> extends ChangeNotifier {
   /// 只选中父项（清除其下所有子项的选中状态）
   void selectParentOnly(ID parentId) {
     final childIds = _items
-        .where((i) => parentIdExtractor(i) == parentId)
-        .map(idExtractor)
+        .where((i) => i.parentId == parentId)
+        .map((i) => i.id)
         .toList();
 
     _selectedIds.removeAll(childIds);

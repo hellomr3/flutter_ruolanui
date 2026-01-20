@@ -12,23 +12,140 @@
 - 泛型设计，支持任意数据类型
 - 灵活的渲染器自定义
 - 使用 ChangeNotifier 进行状态管理（不依赖 MobX）
+- **点击处理由内部处理，外部只需负责 UI 展示**
 
 ## 快速开始
+
+### 1. 定义数据模型
+
+数据模型需要实现 `SelectorItem<ID>` 接口：
 
 ```dart
 import 'package:ruolanui/ruolanui.dart';
 
+class CityItem implements SelectorItem<String> {
+  @override
+  final String id;
+  @override
+  final String name;
+  @override
+  final String? parentId;
+
+  CityItem({
+    required this.id,
+    required this.name,
+    String? pid,
+  }) : parentId = pid;
+}
+```
+
+### 2. 使用 SelectorDialog（推荐）
+
+#### 单选模式
+
+```dart
+Future<CityItem?> showCitySelect(BuildContext context) {
+  final cityItems = [
+    CityItem(name: "城市1", id: "1"),
+    CityItem(name: "城市2", id: "2"),
+    CityItem(name: "城市11", id: "11", parentId: "1"),
+    CityItem(name: "城市12", id: "12", parentId: "1"),
+  ];
+
+  return SelectorDialog.showSingle<CityItem, String>(
+    context: context,
+    title: "选择城市",
+    items: cityItems,
+    parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.grey[200] : Colors.transparent,
+          border: Border(
+            left: BorderSide(
+              color: isSelected ? Colors.blue : Colors.transparent,
+              width: 4,
+            ),
+          ),
+        ),
+        child: Text(item.name),
+      );
+    },
+    childItemBuilder: (context, item, isSelected) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+        child: Text(item.name),
+      );
+    },
+    selectedItemBuilder: (context, item, onRemove) {
+      return Chip(
+        label: Text(item.name),
+        onDeleted: onRemove,
+      );
+    },
+    // 配置"全部"选项
+    parentAllItem: CityItem(name: "全部", id: "_all"),
+    childAllItemBuilder: (String? parentItemId) {
+      if (parentItemId == null) return null;
+      return CityItem(name: "全部", id: parentItemId);
+    },
+  );
+}
+
+// 调用
+final selected = await showCitySelect(context);
+if (selected != null) {
+  print('选中了: ${selected.name}');
+}
+```
+
+#### 多选模式
+
+```dart
+Future<List<CityItem>> showCitySelectMultiple(BuildContext context) {
+  return SelectorDialog.showMultiple<CityItem, String>(
+    context: context,
+    title: "选择城市",
+    items: cityItems,
+    initialSelectedIds: ["1", "11"], // 初始选中的ID
+    parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+      // ... 同单选模式
+    },
+    childItemBuilder: (context, item, isSelected) {
+      // ... 同单选模式
+    },
+    selectedItemBuilder: (context, item, onRemove) {
+      // ... 同单选模式
+    },
+    onConfirm: (selectedItems) {
+      // 不需要处理，自动返回
+    },
+  );
+}
+
+// 调用
+final selectedList = await showCitySelectMultiple(context);
+for (final item in selectedList) {
+  print('选中了: ${item.name}');
+}
+```
+
+### 3. 直接使用 TwoPaneSelector
+
+```dart
 TwoPaneSelector<CityItem, String>(
   title: '选择城市',
   mode: SelectorMode.multiple,
   items: cities,
-  idExtractor: (item) => item.id,
-  parentIdExtractor: (item) => item.parentId,
-  parentItemBuilder: (context, item, isSelected, hasSelectedItems, onTap) {
-    return ListTile(title: Text(item.name), onTap: onTap);
+  parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+    return ListTile(title: Text(item.name));
   },
-  childItemBuilder: (context, item, isSelected, onTap) {
-    return CheckboxListTile(value: isSelected, title: Text(item.name), onChanged: (_) => onTap());
+  childItemBuilder: (context, item, isSelected) {
+    return CheckboxListTile(
+      value: isSelected,
+      title: Text(item.name),
+    );
   },
   selectedItemBuilder: (context, item, onRemove) {
     return Chip(label: Text(item.name), onDeleted: onRemove);
@@ -46,58 +163,25 @@ TwoPaneSelector<CityItem, String>(
 - **`parentAllItem`**: 一级"全部"选项的数据（null 表示不显示一级"全部"）
 - **`childAllItemBuilder`**: 二级"全部"选项的数据构建器，参数为当前选中的父项ID
 
-### 配置示例
+### 配置说明
 
 ```dart
-// 一级"全部"选项
-static const _parentAllItem = CategoryEntity(
-  id: '_all',  // 使用特殊 ID 表示全局全部
-  name: "全部",
-  pid: null,
-);
+// 一级"全部"选项（显示在左侧顶部）
+parentAllItem: CityItem(name: "全部", id: "_all"),
 
-// 构建二级"全部"选项
-CategoryEntity? _buildChildAllItem(String? parentItemId) {
+// 二级"全部"选项（显示在右侧顶部）
+childAllItemBuilder: (String? parentItemId) {
   if (parentItemId == null) return null;
   // 使用父项 ID 作为二级"全部"的 ID
-  return CategoryEntity(
-    id: parentItemId,
-    name: "全部",
-    pid: parentItemId,
-  );
-}
-
-TwoPaneSelector<CategoryEntity, String>(
-  // ... 其他参数
-  parentAllItem: _parentAllItem,
-  childAllItemBuilder: _buildChildAllItem,
-);
-```
-
-## 单选模式返回逻辑
-
-在单选模式下，需要通过 `onItemTap` 回调处理返回逻辑（关闭弹窗等）：
-
-```dart
-onItemTap: (item) {
-  if (item == null) {
-    // 点击了全局"全部"，返回 null
-    SmartDialog.dismiss(result: null);
-    return;
-  }
-  if (mode == SelectMode.single) {
-    // 单选模式，关闭弹窗并返回选中的项目
-    SmartDialog.dismiss(result: item);
-    return;
-  }
+  return CityItem(name: "全部", id: parentItemId);
 }
 ```
 
-**说明**：
-- 当 `item == null` 时，表示用户点击了全局"全部"（一级"全部"下的二级"全部"）
-- 当 `item != null` 时，可能是：
-  - 普通子项被选中
-  - 父项下的二级"全部"被选中（返回父项数据）
+### 单选模式返回值说明
+
+- **点击普通子项**：返回该子项数据
+- **点击父项的"全部"**：返回该父项数据
+- **点击一级"全部"的"全部"**：返回 `null`
 
 ## 父子联动逻辑
 
@@ -137,29 +221,72 @@ onItemTap: (item) {
 
 ```
 用户操作：点击一级"全部" → 点击二级"全部"
-返回：null（表示选中了所有分类）
+单选返回：null（表示选中了所有分类）
 ```
 
 ## API 参数
+
+### TwoPaneSelector
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `title` | `String` | 是 | 标题 |
 | `mode` | `SelectorMode` | 是 | 选择模式（single/multiple） |
-| `items` | `List<T>` | 是 | 数据列表 |
-| `idExtractor` | `ID Function(T)` | 是 | ID提取器 |
-| `parentIdExtractor` | `ID? Function(T)` | 是 | 父ID提取器 |
-| `parentItemBuilder` | `Widget Function` | 是 | 左侧父项构建器 |
-| `childItemBuilder` | `Widget Function` | 是 | 右侧子项构建器 |
-| `selectedItemBuilder` | `Widget Function` | 是 | 已选项目构建器 |
+| `items` | `List<T>` | 是 | 数据列表（T 必须实现 SelectorItem） |
+| `initialSelectedIds` | `List<ID>?` | 否 | 初始选中的ID列表 |
+| `parentItemBuilder` | `Widget Function` | 是 | 左侧父项构建器（只负责UI展示） |
+| `childItemBuilder` | `Widget Function` | 是 | 右侧子项构建器（只负责UI展示） |
+| `selectedItemBuilder` | `Widget Function` | 是 | 已选项目构建器（底部栏） |
 | `parentAllItem` | `T?` | 否 | 一级"全部"选项的数据 |
 | `childAllItemBuilder` | `T? Function(ID?)` | 是 | 二级"全部"选项的数据构建器 |
 | `onConfirm` | `Function(List<T>)?` | 否 | 确认回调（多选） |
-| `onItemTap` | `Function(T?)?` | 否 | 点击回调（单选，需处理关闭弹窗等逻辑） |
+| `onItemTap` | `Function(T?)?` | 否 | 点击回调（单选） |
 | `onBack` | `VoidCallback?` | 否 | 返回回调 |
 | `emptyState` | `Widget?` | 否 | 空状态提示 |
 | `actionButton` | `Widget?` | 否 | 右上角自定义操作按钮 |
 | `theme` | `TwoPaneSelectorTheme?` | 否 | 主题配置 |
+
+### SelectorDialog.showSingle
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `context` | `BuildContext` | 是 | 上下文 |
+| `title` | `String` | 是 | 标题 |
+| `items` | `List<T>` | 是 | 数据列表 |
+| `initialSelectedId` | `ID?` | 否 | 初始选中的ID |
+| `parentItemBuilder` | `Widget Function` | 是 | 左侧父项构建器 |
+| `childItemBuilder` | `Widget Function` | 是 | 右侧子项构建器 |
+| `selectedItemBuilder` | `Widget Function` | 是 | 已选项目构建器 |
+| `parentAllItem` | `T?` | 否 | 一级"全部"选项 |
+| `childAllItemBuilder` | `T? Function(ID?)` | 是 | 二级"全部"选项构建器 |
+| `onItemTap` | `Function(T?)?` | 否 | 点击回调（用于埋点等） |
+| `theme` | `TwoPaneSelectorTheme?` | 否 | 主题配置 |
+
+### Builder 签名
+
+```dart
+// 父项构建器（点击由内部处理）
+Widget Function(
+  BuildContext context,
+  T item,
+  bool isSelected,      // 是否被选中
+  bool hasSelectedItems, // 该父项下是否有被选中的子项
+) parentItemBuilder
+
+// 子项构建器（点击由内部处理）
+Widget Function(
+  BuildContext context,
+  T item,
+  bool isSelected,
+) childItemBuilder
+
+// 已选项目构建器（底部栏）
+Widget Function(
+  BuildContext context,
+  T item,
+  VoidCallback onRemove, // 移除回调
+) selectedItemBuilder
+```
 
 ## 选择结果处理
 
@@ -167,9 +294,7 @@ onItemTap: (item) {
 // 多选模式
 onConfirm: (selectedItems) {
   for (final item in selectedItems) {
-    final parentId = parentIdExtractor(item);
-
-    if (parentId == null) {
+    if (item.parentId == null) {
       // 父项被选中，表示该父项下的"全部"
       print('选中了 ${item.name} 的全部');
     } else {
@@ -179,23 +304,19 @@ onConfirm: (selectedItems) {
   }
 }
 
-// 单选模式
+// 单选模式（SelectorDialog 内部已处理）
 onItemTap: (item) {
-  if (item == null) {
-    // 全局"全部"被选中
-    Navigator.pop(context, null);
-  } else {
-    // 普通项目或父项"全部"被选中
-    Navigator.pop(context, item);
-  }
+  // 可选：用于埋点或其他自定义逻辑
+  print('用户选择了: $item');
 }
 ```
 
 ## 注意事项
 
-1. 一级"全部"使用特殊 ID（如 `"_all"`），二级"全部"使用父项 ID
-2. `onItemTap` 在单选模式下需要处理关闭弹窗的逻辑
-3. 父项被选中表示该父项下的"全部"被选中
-4. 确保每个数据项的 ID 是唯一的
-5. parentIdExtractor 应返回 null 表示顶级项目
+1. **数据模型必须实现 `SelectorItem<ID>` 接口**
+2. 点击处理由组件内部统一处理，外部 builder 只需返回 UI widget
+3. 一级"全部"使用特殊 ID（如 `"_all"`），二级"全部"使用父项 ID
+4. 父项被选中表示该父项下的"全部"被选中
+5. 确保每个数据项的 ID 是唯一的
 6. `childAllItemBuilder` 是必填参数，即使不显示二级"全部"也需要提供（可返回 null）
+7. 单选模式下点击任何选项都会自动关闭弹窗并返回结果
