@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ruolanui/src/widgets/btn/primary_btn.dart';
 import 'package:ruolanui/src/widgets/select/selector_dialog.dart';
 import 'package:ruolanui/src/widgets/select/selector_item.dart';
 import 'package:ruolanui/src/widgets/select/two_pane_selector_controller.dart';
@@ -102,9 +103,15 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     extends State<TwoPaneSelector<T, ID>> {
   late final TwoPaneSelectorController<T, ID> controller;
 
-  ColorScheme get colorScheme => Theme.of(context).colorScheme;
+  ColorScheme get colorScheme =>
+      Theme
+          .of(context)
+          .colorScheme;
 
-  TextTheme get textTheme => Theme.of(context).textTheme;
+  TextTheme get textTheme =>
+      Theme
+          .of(context)
+          .textTheme;
 
   /// 获取主题配置，如果没有提供则使用默认主题
   TwoPaneSelectorTheme get theme =>
