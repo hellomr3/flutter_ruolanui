@@ -24,25 +24,25 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
 
   /// 左侧父项构建器（只负责 UI 展示，点击由内部处理）
   final Widget Function(
-      BuildContext context,
-      T item,
-      bool isSelected,
-      bool hasSelectedItems,
-      ) parentItemBuilder;
+    BuildContext context,
+    T item,
+    bool isSelected,
+    bool hasSelectedItems,
+  ) parentItemBuilder;
 
   /// 右侧子项构建器（只负责 UI 展示，点击由内部处理）
   final Widget Function(
-      BuildContext context,
-      T item,
-      bool isSelected,
-      ) childItemBuilder;
+    BuildContext context,
+    T item,
+    bool isSelected,
+  ) childItemBuilder;
 
   /// 已选项目构建器（用于底部展示栏）
   final Widget Function(
-      BuildContext context,
-      T item,
-      VoidCallback onRemove,
-      ) selectedItemBuilder;
+    BuildContext context,
+    T item,
+    VoidCallback onRemove,
+  )? selectedItemBuilder;
 
   /// 空状态提示
   final Widget? emptyState;
@@ -81,7 +81,7 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
     required this.items,
     required this.parentItemBuilder,
     required this.childItemBuilder,
-    required this.selectedItemBuilder,
+    this.selectedItemBuilder,
     this.initialSelectedIds,
     this.emptyState,
     this.actionButton,
@@ -94,8 +94,7 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
   });
 
   @override
-  State<TwoPaneSelector<T, ID>> createState() =>
-      TwoPaneSelectorState<T, ID>();
+  State<TwoPaneSelector<T, ID>> createState() => TwoPaneSelectorState<T, ID>();
 }
 
 /// TwoPaneSelector 的状态类
@@ -103,15 +102,9 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     extends State<TwoPaneSelector<T, ID>> {
   late final TwoPaneSelectorController<T, ID> controller;
 
-  ColorScheme get colorScheme =>
-      Theme
-          .of(context)
-          .colorScheme;
+  ColorScheme get colorScheme => Theme.of(context).colorScheme;
 
-  TextTheme get textTheme =>
-      Theme
-          .of(context)
-          .textTheme;
+  TextTheme get textTheme => Theme.of(context).textTheme;
 
   /// 获取主题配置，如果没有提供则使用默认主题
   TwoPaneSelectorTheme get theme =>
@@ -131,10 +124,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery
-          .of(context)
-          .size
-          .height * theme.containerHeightFactor,
+      height: MediaQuery.of(context).size.height * theme.containerHeightFactor,
       decoration: BoxDecoration(
         color: theme.containerColor ?? colorScheme.surface,
         borderRadius: theme.containerBorderRadius,
@@ -145,7 +135,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
           _buildHeader(),
           Divider(height: theme.dividerHeight),
           _buildContent(),
-          _buildBottomBar(),
+          if (widget.selectedItemBuilder != null) _buildBottomBar(),
         ],
       ),
     );
@@ -174,15 +164,13 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
               const Spacer(),
               if (widget.actionButton != null)
                 widget.actionButton!
-              else
-                if (widget.onConfirm != null)
-                  PrimaryBtn(
-                    label: theme.confirmButtonText,
-                    height: theme.confirmButtonHeight,
-                    borderRadius: theme.confirmButtonBorderRadius,
-                    onPressed: () =>
-                        widget.onConfirm!(controller.selectedItems),
-                  ),
+              else if (widget.onConfirm != null)
+                PrimaryBtn(
+                  label: theme.confirmButtonText,
+                  height: theme.confirmButtonHeight,
+                  borderRadius: theme.confirmButtonBorderRadius,
+                  onPressed: () => widget.onConfirm!(controller.selectedItems),
+                ),
             ],
           ),
         );
@@ -203,10 +191,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
             children: [
               // 左侧父项列表
               Container(
-                width: MediaQuery
-                    .of(context)
-                    .size
-                    .width *
+                width: MediaQuery.of(context).size.width *
                     theme.leftPanelWidthFactor,
                 color: theme.leftPanelColor ?? colorScheme.surface,
                 child: ListView(
@@ -218,7 +203,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
                     ...parentItems.map((item) {
                       final isSelected = selectedParentId == item.id;
                       final hasSelectedItems =
-                      controller.hasSelectedChildren(item);
+                          controller.hasSelectedChildren(item);
 
                       return InkWell(
                         onTap: () => controller.selectParent(item.id),
@@ -240,25 +225,25 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
                   child: selectedParentId == null
                       ? widget.emptyState ?? _defaultEmptyState()
                       : ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      // 右侧顶部"全部"选项（如果配置了）
-                      _buildChildAllItem(selectedParentId),
-                      // 子项列表
-                      ...childItems.map((item) {
-                        final isSelected =
-                        controller.selectedIds.contains(item.id);
-                        return InkWell(
-                          onTap: () => _handleItemTap(item),
-                          child: widget.childItemBuilder(
-                            context,
-                            item,
-                            isSelected,
-                          ),
-                        );
-                      }),
-                    ],
-                  ),
+                          padding: EdgeInsets.zero,
+                          children: [
+                            // 右侧顶部"全部"选项（如果配置了）
+                            _buildChildAllItem(selectedParentId),
+                            // 子项列表
+                            ...childItems.map((item) {
+                              final isSelected =
+                                  controller.selectedIds.contains(item.id);
+                              return InkWell(
+                                onTap: () => _handleItemTap(item),
+                                child: widget.childItemBuilder(
+                                  context,
+                                  item,
+                                  isSelected,
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
                 ),
               ),
             ],
@@ -321,9 +306,8 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     // 检查是否是"全部"项（ID 等于父项 ID）
     if (childAllItem.id == parentItemId) {
       // 检查是否是一级"全部"下的二级"全部"
-      final parentAllId = widget.parentAllItem != null
-          ? widget.parentAllItem!.id
-          : null;
+      final parentAllId =
+          widget.parentAllItem != null ? widget.parentAllItem!.id : null;
       final isGlobalAll = parentAllId != null && parentItemId == parentAllId;
 
       if (isGlobalAll) {
@@ -373,7 +357,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
       animation: controller,
       builder: (context, _) {
         return widget.mode == SelectorMode.multiple &&
-            controller.selectedIds.isNotEmpty
+                controller.selectedIds.isNotEmpty
             ? _buildSelectedBottomBar()
             : const SizedBox.shrink();
       },
@@ -387,26 +371,22 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
       color: theme.containerColor ?? colorScheme.surface,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: ConstrainedBox(
-        constraints: BoxConstraints(minWidth: MediaQuery
-            .sizeOf(context)
-            .width),
+        constraints: BoxConstraints(minWidth: MediaQuery.sizeOf(context).width),
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
             children: selectedItems.map((item) {
-              return widget.selectedItemBuilder(
+              return widget.selectedItemBuilder!(
                 context,
                 item,
-                    () => controller.toggleSelection(item.id),
+                () => controller.toggleSelection(item.id),
               );
             }).toList(),
           ),
         ),
       ),
     ).paddingDirectional(
-      bottom: MediaQuery
-          .paddingOf(context)
-          .bottom,
+      bottom: MediaQuery.paddingOf(context).bottom,
       top: theme.bottomBarTopPadding,
     );
   }

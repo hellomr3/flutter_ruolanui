@@ -8,5 +8,5 @@ abstract class SelectorItem<ID> {
   String get name;
 
   /// 父项ID（null 表示是一级项）
-  ID? get parentId;
+  ID? get pid;
 }

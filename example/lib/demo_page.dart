@@ -308,7 +308,7 @@ class _DemoPageState extends State<DemoPage> {
       title: '选择分类',
       items: items,
       idExtractor: (item) => item.id,
-      parentIdExtractor: (item) => item.parentId,
+      parentIdExtractor: (item) => item.pid,
       initialSelectedId: _selectedCategory,
       parentItemBuilder: (context, item, isSelected, hasSelectedItems, onTap) {
         final theme = Theme.of(context);
@@ -431,7 +431,7 @@ class _DemoPageState extends State<DemoPage> {
             mode: SelectorMode.multiple,
             items: items,
             idExtractor: (item) => item.id,
-            parentIdExtractor: (item) => item.parentId,
+            parentIdExtractor: (item) => item.pid,
             parentItemBuilder:
                 (context, item, isSelected, hasSelectedItems, onTap) {
               final theme = Theme.of(context);
@@ -504,7 +504,7 @@ class _DemoPageState extends State<DemoPage> {
             mode: SelectorMode.single,
             items: items,
             idExtractor: (item) => item.id,
-            parentIdExtractor: (item) => item.parentId,
+            parentIdExtractor: (item) => item.pid,
             childAllItemBuilder: (String? parentItemId) {
               return CategoryItem(id: parentItemId ?? "", name: "全部");
             },

@@ -26,13 +26,12 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   Set<ID> get selectedIds => Set.unmodifiable(_selectedIds);
 
   /// 父项列表
-  List<T> get parentItems =>
-      _items.where((i) => i.parentId == null).toList();
+  List<T> get parentItems => _items.where((i) => i.pid == null).toList();
 
   /// 子项列表（包含虚拟"全部"项）
   List<T> get childItems {
     if (_selectedParentId == null) return [];
-    return _items.where((i) => i.parentId == _selectedParentId).toList();
+    return _items.where((i) => i.pid == _selectedParentId).toList();
   }
 
   /// 选中的项目列表（用于底部展示）
@@ -74,7 +73,7 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
         (i) => i.id == firstSelectedId,
         orElse: () => _items.first,
       );
-      final parentId = firstSelectedItem.parentId;
+      final parentId = firstSelectedItem.pid;
 
       if (parentId != null) {
         // 如果是子项，选中其父级
@@ -85,8 +84,7 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
       }
     } else {
       // 默认选中左侧第一个父项
-      _selectedParentId =
-          parentItems.isEmpty ? null : parentItems.first.id;
+      _selectedParentId = parentItems.isEmpty ? null : parentItems.first.id;
     }
 
     notifyListeners();
@@ -103,7 +101,7 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   /// 切换项目的选中状态
   void toggleSelection(ID itemId) {
     final item = _items.firstWhere((i) => i.id == itemId);
-    final parentId = item.parentId;
+    final parentId = item.pid;
 
     if (mode == SelectorMode.single) {
       // 单选模式：清除之前的选择，只保留当前选择
@@ -135,10 +133,8 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
       _selectedIds.remove(parentId);
     } else {
       // 选中父项，清除该父项下的所有子项选中状态
-      final childIds = _items
-          .where((i) => i.parentId == parentId)
-          .map((i) => i.id)
-          .toList();
+      final childIds =
+          _items.where((i) => i.pid == parentId).map((i) => i.id).toList();
       _selectedIds.removeAll(childIds);
       _selectedIds.add(parentId);
     }
@@ -156,10 +152,8 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     }
 
     // 获取所有子项
-    final childIds = _items
-        .where((i) => i.parentId == parentId)
-        .map((i) => i.id)
-        .toList();
+    final childIds =
+        _items.where((i) => i.pid == parentId).map((i) => i.id).toList();
 
     // 检查是否所有子项都被选中
     if (childIds.isNotEmpty &&
@@ -174,8 +168,7 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   bool hasSelectedChildren(T parentItem) {
     final parentId = parentItem.id;
     return _selectedIds.any((id) =>
-        id == parentId ||
-        _items.any((i) => i.id == id && i.parentId == parentId));
+        id == parentId || _items.any((i) => i.id == id && i.pid == parentId));
   }
 
   /// 检查父项是否被选中（表示选中了该父项下的全部）
@@ -190,10 +183,8 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     // 如果父项被选中，表示全部被选中
     if (_selectedIds.contains(parentId)) return true;
 
-    final childIds = _items
-        .where((i) => i.parentId == parentId)
-        .map((i) => i.id)
-        .toList();
+    final childIds =
+        _items.where((i) => i.pid == parentId).map((i) => i.id).toList();
     if (childIds.isEmpty) return false;
     return childIds.every((id) => _selectedIds.contains(id));
   }
@@ -212,10 +203,8 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
       if (_selectedIds.contains(parentId)) {
         _selectedIds.remove(parentId);
       } else {
-        final childIds = _items
-            .where((i) => i.parentId == parentId)
-            .map((i) => i.id)
-            .toList();
+        final childIds =
+            _items.where((i) => i.pid == parentId).map((i) => i.id).toList();
         _selectedIds.removeAll(childIds);
         _selectedIds.add(parentId);
       }
