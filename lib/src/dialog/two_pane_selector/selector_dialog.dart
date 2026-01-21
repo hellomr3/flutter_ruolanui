@@ -57,7 +57,16 @@ class SelectorDialog {
         childItemBuilder: childItemBuilder,
         emptyState: emptyState,
         actionButton: actionButton,
-        onConfirm: (items) => Navigator.pop(context, items.firstOrNull),
+        onConfirm: (items) {
+          final isAll = items.firstOrNull?.id == itemAll;
+          if (isAll) {
+            Navigator.pop(
+              context,
+            );
+            return;
+          }
+          Navigator.pop(context, items.firstOrNull);
+        },
         onBack: () => Navigator.pop(context),
         parentAllItem: parentAllItem,
         childAllItemBuilder:
@@ -114,7 +123,16 @@ class SelectorDialog {
         selectedItemBuilder: selectedItemBuilder,
         emptyState: emptyState,
         onBack: () => Navigator.pop(context),
-        onConfirm: (items) => Navigator.pop(context, items),
+        onConfirm: (items) {
+          final isAll = items.firstOrNull?.id == itemAll;
+          if (isAll) {
+            Navigator.pop(
+              context,
+            );
+            return;
+          }
+          Navigator.pop(context, items);
+        },
         parentAllItem: parentAllItem,
         childAllItemBuilder:
             childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
