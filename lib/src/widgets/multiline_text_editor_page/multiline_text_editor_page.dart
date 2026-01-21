@@ -53,7 +53,7 @@ class MultilineEditorTheme {
   const MultilineEditorTheme.defaultTheme() : this();
 
   /// 从当前 context 创建基于系统主题的配置
-  static MultilineEditorTheme of(BuildContext context) {
+  factory MultilineEditorTheme.of(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
