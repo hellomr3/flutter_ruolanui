@@ -292,7 +292,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     }
 
     return InkWell(
-      onTap: () => _handleChildAllItemTap(childAllItem, selectedParentId),
+      onTap: () => _handleItemTap(childAllItem),
       child: widget.childItemBuilder(
         context,
         childAllItem,
@@ -301,55 +301,22 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     );
   }
 
-  /// 处理二级"全部"选项的点击
-  void _handleChildAllItemTap(T childAllItem, ID parentItemId) {
-    // 切换显示到该父项
-    controller.selectParent(parentItemId);
-
-    // 检查是否是"全部"项（ID 等于父项 ID）
-    if (childAllItem.id == parentItemId) {
-      // 检查是否是一级"全部"下的二级"全部"
-      final parentAllId =
-          widget.parentAllItem != null ? widget.parentAllItem!.id : null;
-      final isGlobalAll = parentAllId != null && parentItemId == parentAllId;
-
-      if (isGlobalAll) {
-        // 这是一级"全部"下的二级"全部"，返回空数据
-        widget.onItemTap?.call(null);
-        return;
-      }
-
-      // 这是普通父项下的二级"全部"
-      // 单选模式：选中父项并返回；多选模式：切换父项选中状态
-      final success = controller.toggleAllChildren(parentItemId);
-
-      if (!success) {
-        widget.onMaxLimitReached?.call();
-        return;
-      }
-
-      // 单选模式下，选择后返回结果
-      if (widget.mode == SelectorMode.single) {
-        widget.onItemTap?.call(controller.selectedItem);
-      }
+  void _handleItemTap(T item) {
+    if (item.id == itemAll) {
+      widget.onConfirm?.call([item]);
+      return;
+    }
+    // 单选模式下，选择后调用 onItemTap 返回结果
+    if (widget.mode == SelectorMode.single) {
+      widget.onConfirm?.call([item]);
       return;
     }
 
-    // 正常子项：使用常规的选中逻辑
-    _handleItemTap(childAllItem);
-  }
-
-  void _handleItemTap(T item) {
     final success = controller.toggleSelection(item.id);
 
     if (!success) {
       widget.onMaxLimitReached?.call();
       return;
-    }
-
-    // 单选模式下，选择后调用 onItemTap 返回结果
-    if (widget.mode == SelectorMode.single) {
-      widget.onItemTap?.call(controller.selectedItem);
     }
   }
 

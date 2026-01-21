@@ -41,7 +41,7 @@ class SelectorDialog {
     T? Function(ID? parentItemId)? childAllItemBuilder,
     void Function(T? selectedItem)? onItemTap,
   }) async {
-    return showModalBottomSheet<T>(
+    return showModalBottomSheet<T?>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -57,13 +57,8 @@ class SelectorDialog {
         childItemBuilder: childItemBuilder,
         emptyState: emptyState,
         actionButton: actionButton,
+        onConfirm: (items) => Navigator.pop(context, items.firstOrNull),
         onBack: () => Navigator.pop(context),
-        onItemTap: (item) {
-          // 调用外部回调（可用于埋点等）
-          onItemTap?.call(item);
-          // 处理返回逻辑（关闭弹窗并返回数据）
-          Navigator.pop(context, item);
-        },
         parentAllItem: parentAllItem,
         childAllItemBuilder:
             childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,

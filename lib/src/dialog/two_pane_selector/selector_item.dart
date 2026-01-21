@@ -10,3 +10,5 @@ abstract class SelectorItem<ID> {
   /// 父项ID（null 表示是一级项）
   ID? get pid;
 }
+
+const itemAll = "_all";
