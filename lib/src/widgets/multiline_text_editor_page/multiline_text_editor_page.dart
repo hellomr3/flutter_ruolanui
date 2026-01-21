@@ -51,6 +51,26 @@ class MultilineEditorTheme {
 
   /// 创建默认主题
   const MultilineEditorTheme.defaultTheme() : this();
+
+  /// 从当前 context 创建基于系统主题的配置
+  static MultilineEditorTheme of(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return MultilineEditorTheme(
+      backgroundColor: colorScheme.surface,
+      appBarBackgroundColor: colorScheme.surface,
+      titleColor: colorScheme.onSurface,
+      subTitleColor: colorScheme.onSurface.withOpacity(0.6),
+      backIconColor: colorScheme.onSurface,
+      confirmButtonColor: colorScheme.primary,
+      confirmButtonDisabledColor: colorScheme.onSurface.withOpacity(0.38),
+      toolbarBackgroundColor: colorScheme.surface,
+      clearButtonColor: colorScheme.primary,
+      clearButtonDisabledColor: colorScheme.onSurface.withOpacity(0.38),
+    );
+  }
 }
 
 /// 长文本编辑页面
@@ -87,7 +107,8 @@ class MultilineTextEditorPage extends StatefulWidget {
   });
 
   @override
-  State<MultilineTextEditorPage> createState() => _MultilineTextEditorPageState();
+  State<MultilineTextEditorPage> createState() =>
+      _MultilineTextEditorPageState();
 }
 
 class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
