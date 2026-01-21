@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:ruolanui/ruolanui.dart';
 
-import 'selector_item.dart';
 import 'two_pane_selector.dart';
-import 'two_pane_selector_theme.dart';
 
 /// 选择模式
 enum SelectorMode { single, multiple }
@@ -18,7 +17,7 @@ class SelectorDialog {
   /// 显示单选选择器弹窗
   ///
   /// 返回选中的项目，如果取消选择则返回 null
-  static Future<T?> showSingle<T extends SelectorItem<ID>, ID>({
+  static Future<Result<T>> showSingle<T extends SelectorItem<ID>, ID>({
     required BuildContext context,
     required String title,
     required List<T> items,
@@ -41,7 +40,7 @@ class SelectorDialog {
     T? Function(ID? parentItemId)? childAllItemBuilder,
     void Function(T? selectedItem)? onItemTap,
   }) async {
-    return showModalBottomSheet<T?>(
+    final result = await showModalBottomSheet<Result<T>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -60,25 +59,24 @@ class SelectorDialog {
         onConfirm: (items) {
           final isAll = items.firstOrNull?.id == itemAll;
           if (isAll) {
-            Navigator.pop(
-              context,
-            );
+            Navigator.pop(context, Result.success(null));
             return;
           }
-          Navigator.pop(context, items.firstOrNull);
+          Navigator.pop(context, Result.success(items.firstOrNull));
         },
-        onBack: () => Navigator.pop(context),
+        onBack: () => Navigator.pop(context, Result<T>.failure("取消选择")),
         parentAllItem: parentAllItem,
         childAllItemBuilder:
             childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
       ),
     );
+    return result ?? Result<T>.failure("无返回数据");
   }
 
   /// 显示多选选择器弹窗
   ///
   /// 返回选中的项目列表，如果取消选择则返回空列表
-  static Future<List<T>> showMultiple<T extends SelectorItem<ID>, ID>({
+  static Future<Result<List<T>>> showMultiple<T extends SelectorItem<ID>, ID>({
     required BuildContext context,
     required String title,
     required List<T> items,
@@ -107,7 +105,7 @@ class SelectorDialog {
     int maxSelectedCount = 5,
     VoidCallback? onMaxLimitReached,
   }) async {
-    final result = await showModalBottomSheet<List<T>>(
+    final result = await showModalBottomSheet<Result<List<T>>>(
       context: context,
       isScrollControlled: true,
       isDismissible: false,
@@ -122,16 +120,14 @@ class SelectorDialog {
         childItemBuilder: childItemBuilder,
         selectedItemBuilder: selectedItemBuilder,
         emptyState: emptyState,
-        onBack: () => Navigator.pop(context),
+        onBack: () => Navigator.pop(context, Result<List<T>>.failure("已取消")),
         onConfirm: (items) {
           final isAll = items.firstOrNull?.id == itemAll;
           if (isAll) {
-            Navigator.pop(
-              context,
-            );
+            Navigator.pop(context, Result.success(<T>[]));
             return;
           }
-          Navigator.pop(context, items);
+          Navigator.pop(context, Result.success(items));
         },
         parentAllItem: parentAllItem,
         childAllItemBuilder:
@@ -142,6 +138,6 @@ class SelectorDialog {
       ),
     );
 
-    return result ?? [];
+    return result ?? Result<List<T>>.failure("无返回数据");
   }
 }

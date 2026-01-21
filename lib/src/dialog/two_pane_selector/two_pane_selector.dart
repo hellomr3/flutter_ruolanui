@@ -354,7 +354,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
       selectedItems: selectedItems,
       onRemove: (itemId) => controller.toggleSelection(itemId),
       onClear: () => controller.clearSelection(),
-      onConfirm: () => widget.onConfirm!(selectedItems),
+      onConfirm: () => widget.onConfirm?.call(selectedItems),
       bottomPadding: MediaQuery.paddingOf(context).bottom,
       topPadding: theme.bottomBarTopPadding,
     );
