@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruolanui/ruolanui.dart';
+import 'package:ruolanui_example/pages/option.dart';
 
 /// RuolanUI 组件示例页面
 class DemoPage extends StatefulWidget {
@@ -36,6 +37,7 @@ class _DemoPageState extends State<DemoPage> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Option(),
             _buildSectionTitle('按钮组件'),
             const SizedBox(height: 12),
             Wrap(
@@ -159,27 +161,6 @@ class _DemoPageState extends State<DemoPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SelectorButton(
-          label: '单选选择器',
-          description: '选择单个项目',
-          icon: Icons.radio_button_checked,
-          onPressed: _showSingleSelector,
-        ),
-        const SizedBox(height: 12),
-        _SelectorButton(
-          label: '多选选择器',
-          description: '选择多个项目',
-          icon: Icons.check_box,
-          onPressed: _showMultipleSelector,
-        ),
-        const SizedBox(height: 12),
-        _SelectorButton(
-          label: '带全选多选',
-          description: '支持全选功能',
-          icon: Icons.select_all,
-          onPressed: _showSelectorWithSelectAll,
-        ),
-        const SizedBox(height: 12),
-        _SelectorButton(
           label: '自定义主题',
           description: '自定义选择器样式',
           icon: Icons.palette,
@@ -299,236 +280,6 @@ class _DemoPageState extends State<DemoPage> {
     });
   }
 
-  /// 单选选择器
-  void _showSingleSelector() {
-    final items = _buildCategoryData();
-
-    SelectorDialog.showSingle<CategoryItem, String>(
-      context: context,
-      title: '选择分类',
-      items: items,
-      initialSelectedId: _selectedCategory?.id,
-      // 配置二级"全部"选项
-      childAllItemBuilder: (String? pid) {
-        if (pid == null) return null;
-        return CategoryItem(id: pid, name: '全部');
-      },
-      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
-        final theme = Theme.of(context);
-        return Container(
-          color: isSelected ? theme.colorScheme.primaryContainer : null,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(
-                isSelected ? Icons.folder_open : Icons.folder,
-                color: isSelected ? theme.colorScheme.primary : null,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                item.name,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isSelected ? theme.colorScheme.primary : null,
-                  fontWeight: isSelected ? FontWeight.bold : null,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      childItemBuilder: (context, item, isSelected) {
-        final theme = Theme.of(context);
-        return Container(
-          color: isSelected
-              ? theme.colorScheme.primaryContainer.withOpacity(0.5)
-              : null,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(
-                isSelected ? Icons.check_circle : Icons.circle_outlined,
-                color: isSelected ? theme.colorScheme.primary : null,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                item.name,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isSelected ? theme.colorScheme.primary : null,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ).then((selected) {
-      if (selected != null) {
-        setState(() => _selectedCategory = selected);
-        _showSnackbar('选择了: ${selected.name}');
-      }
-    });
-  }
-
-  /// 多选选择器
-  void _showMultipleSelector() {
-    final items = _buildProductData();
-
-    SelectorDialog.showMultiple<ProductItem, String>(
-      context: context,
-      title: '选择产品',
-      items: items,
-      maxSelectedCount: 3,
-      onMaxLimitReached: () {
-        _showSnackbar('已达到最大选择数量');
-      },
-      // 不传 selectedItemBuilder，使用默认样式
-      // 配置二级"全部"选项
-      childAllItemBuilder: (String? pid) {
-        if (pid == null) return null;
-        return ProductItem(
-          id: pid,
-          name: '全部',
-          categoryId: pid,
-          childCount: 0,
-          price: 0,
-        );
-      },
-      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
-        final theme = Theme.of(context);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(
-              left: BorderSide(
-                color:
-                    isSelected ? theme.colorScheme.primary : Colors.transparent,
-                width: 4,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Badge(
-                label: Text(item.childCount.toString()),
-                child: Icon(
-                  Icons.category,
-                  color: isSelected ? theme.colorScheme.primary : null,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                item.name,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      childItemBuilder: (context, item, isSelected) {
-        final theme = Theme.of(context);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(
-                isSelected ? Icons.check_circle : Icons.circle_outlined,
-                color: isSelected ? theme.colorScheme.primary : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.name),
-                    Text(
-                      '¥${item.price.toStringAsFixed(2)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ).then((selected) {
-      if (selected.isNotEmpty) {
-        setState(() => _selectedItems.clear());
-        setState(() => _selectedItems.addAll(selected.map((e) => e.name)));
-        _showSnackbar('已选择 ${selected.length} 个产品');
-      }
-    });
-  }
-
-  /// 带全选的多选选择器
-  void _showSelectorWithSelectAll() {
-    final items = _buildCityData();
-
-    SelectorDialog.showMultiple<CityItem, String>(
-      context: context,
-      title: '选择城市',
-      items: items,
-      maxSelectedCount: 5,
-      onMaxLimitReached: () {
-        _showSnackbar('已达到最大选择数量');
-      },
-      // 配置二级"全部"选项
-      childAllItemBuilder: (String? pid) {
-        if (pid == null) return null;
-        return CityItem(id: pid, name: '全部');
-      },
-      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
-        final theme = Theme.of(context);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primaryContainer : null,
-          ),
-          child: Row(
-            children: [
-              Icon(
-                isSelected ? Icons.location_city : Icons.location_city_outlined,
-                color: isSelected ? theme.colorScheme.primary : null,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                item.name,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      childItemBuilder: (context, item, isSelected) {
-        final theme = Theme.of(context);
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(
-                isSelected ? Icons.check_circle : Icons.circle_outlined,
-                color: isSelected ? theme.colorScheme.primary : null,
-              ),
-              const SizedBox(width: 12),
-              Text(item.name),
-            ],
-          ),
-        );
-      },
-    ).then((selected) {
-      if (selected.isNotEmpty) {
-        setState(() => _selectedItems.clear());
-        setState(() => _selectedItems.addAll(selected.map((e) => e.name)));
-        _showSnackbar('已选择 ${selected.length} 个城市');
-      }
-    });
-  }
-
   /// 自定义主题的选择器
   void _showSelectorWithTheme() {
     final items = _buildCategoryData();
@@ -604,12 +355,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         );
       },
-    ).then((selected) {
-      if (selected != null) {
-        setState(() => _selectedCategory = selected);
-        _showSnackbar('选择了: ${selected.name}');
-      }
-    });
+    );
   }
 
   /// 构建分类数据
