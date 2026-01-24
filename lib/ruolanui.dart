@@ -12,6 +12,7 @@ export 'src/dialog/options/option_item.dart';
 export 'src/dialog/two_pane_selector/selector_dialog.dart';
 export 'src/dialog/two_pane_selector/selector_item.dart';
 export 'src/dialog/two_pane_selector/two_pane_selector_theme.dart';
+export 'src/widgets/btn/block_btn.dart';
 // 按钮相关
 export 'src/widgets/btn/error_btn.dart';
 export 'src/widgets/btn/normal_btn.dart';
