@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:ruolanui/ruolanui.dart';
 
 class OptionsContent extends StatelessWidget {
   final int? value;
 
-  final List<String> options;
+  final List<OptionItem> options;
 
   final String cancelText;
 
-  final ValueChanged<int?> dismiss;
-
   const OptionsContent(
-      {super.key,
-      this.value,
-      required this.options,
-      required this.dismiss,
-      required this.cancelText});
+      {super.key, this.value, required this.options, required this.cancelText});
 
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
     TextTheme textTheme = Theme.of(context).textTheme;
     return Material(
-      color: colorScheme.surfaceContainer,
+      color: colorScheme.surface,
       borderRadius: const BorderRadius.only(
         topLeft: Radius.circular(12),
         topRight: Radius.circular(12),
@@ -33,48 +28,71 @@ class OptionsContent extends StatelessWidget {
           children: [
             // 选项列表
             ListView.separated(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.only(top: 0),
               shrinkWrap: true,
               physics: const ClampingScrollPhysics(),
               itemCount: options.length,
               itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () => dismiss(index),
+                final option = options[index];
+                final isSelected = value == option.id;
+                return GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () =>
+                      Navigator.pop(context, Result.success(option.id)),
                   child: Container(
                     width: double.infinity,
-                    // 占满宽度
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    // 调整点击区域高度
-                    child: Text(
-                      options[index],
-                      textAlign: TextAlign.center, // 强制居中
-                      style: value == index
-                          ? textTheme.titleMedium!
-                              .copyWith(color: colorScheme.primary)
-                          : textTheme.bodyMedium,
+                    height: 54,
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          option.label,
+                          textAlign: TextAlign.center,
+                          style: isSelected
+                              ? textTheme.titleMedium!
+                                  .copyWith(color: colorScheme.primary)
+                              : textTheme.bodyMedium,
+                        ),
+                        if (option.desc != null) ...[
+                          Text(
+                            option.desc!,
+                            textAlign: TextAlign.center,
+                            style: textTheme.labelSmall,
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                 );
               },
               separatorBuilder: (context, index) {
-                return const Divider(indent: 12, endIndent: 12, height: 0.5);
+                return const Divider(height: 0.5);
               },
             ),
 
             // 分隔区
-            const Divider(height: 0.5),
+            Container(
+              height: 8,
+              color: colorScheme.surfaceContainer,
+            ),
 
             // 取消按钮
-            ListTile(
-              title: Text(
-                cancelText,
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium,
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              child: Container(
+                height: 54,
+                padding: const EdgeInsets.all(12.0),
+                child: Text(
+                  cancelText,
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodyMedium,
+                ),
               ),
               onTap: () {
-                dismiss(null);
+                Navigator.pop(context, Result.failure("Cancel"));
               },
-            ),
+            )
           ],
         ),
       ),

@@ -79,26 +79,6 @@ class _DemoPageState extends State<DemoPage> {
               onChange: (_) {},
             ),
             const SizedBox(height: 32),
-            _buildSectionTitle('对话框组件'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                PrimaryBtn(
-                  label: '确认对话框',
-                  onPressed: _showConfirmDialog,
-                ),
-                NormalBtn(
-                  label: '选项对话框',
-                  onPressed: _showOptionsDialog,
-                ),
-                ErrorBtn(
-                  label: '输入对话框',
-                  onPressed: _showInputDialog,
-                ),
-              ],
-            ),
             const SizedBox(height: 32),
             _buildSectionTitle('选择器组件'),
             const SizedBox(height: 12),
@@ -237,29 +217,6 @@ class _DemoPageState extends State<DemoPage> {
         cancelText: '取消',
         onConfirm: () => _showSnackbar('已确认操作'),
         onCancel: () => _showSnackbar('已取消操作'),
-      ),
-    );
-  }
-
-  void _showOptionsDialog() {
-    final options = ['选项一', '选项二', '选项三'];
-    int? currentIndex = options.indexOf(_selectedOption ?? '');
-    if (currentIndex == -1) currentIndex = null;
-
-    showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => OptionsContent(
-        value: currentIndex,
-        options: options,
-        cancelText: '取消',
-        dismiss: (index) {
-          if (index != null) {
-            setState(() => _selectedOption = options[index]);
-            _showSnackbar('选择了: ${options[index]}');
-          }
-          Navigator.of(context).pop();
-        },
       ),
     );
   }

@@ -9,28 +9,19 @@ class Option extends StatelessWidget {
     return PrimaryBtn(
       label: "显示选项",
       onPressed: () {
-        showOptionsDialog(options: ["拍照", "摄像"], context: context);
+        _showAOptionsDialog(options: ["拍照", "摄像"], context: context);
       },
     );
   }
 
-  Future<int?> showOptionsDialog(
+  _showAOptionsDialog(
       {required List<String> options,
       required BuildContext context,
       int? value}) async {
-    final result = await showModalBottomSheet<Result<int>>(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (c) => OptionsContent(
-              options: options,
-              value: value,
-              cancelText: "取消",
-              dismiss: (int? value) {
-                Navigator.pop(context, Result.success(value));
-              },
-            ));
+    final realOptions = List.generate(options.length,
+        (i) => OptionItem(id: i, label: options[i], desc: options[i]));
 
-    return result?.data;
+    final r =
+        showOptionsDialog(context: context, options: realOptions, value: value);
   }
 }

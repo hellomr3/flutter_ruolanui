@@ -4,9 +4,10 @@ export 'src/core/event/event_state_mixin.dart';
 export 'src/core/result.dart';
 export 'src/dialog/adaptive_dialog_page.dart';
 export 'src/dialog/confirm/confirm_dialog.dart';
+export 'src/dialog/dialog.dart';
 // dialog
 export 'src/dialog/input_dialog/input_utils.dart';
-export 'src/dialog/options/options_dialog.dart';
+export 'src/dialog/options/option_item.dart';
 // 两列两级选择器
 export 'src/dialog/two_pane_selector/selector_dialog.dart';
 export 'src/dialog/two_pane_selector/selector_item.dart';
