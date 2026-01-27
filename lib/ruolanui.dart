@@ -1,6 +1,5 @@
 //event
-export 'src/core/event/event_handler_mixin.dart';
-export 'src/core/event/event_state_mixin.dart';
+export 'src/core/event/ui_event_bus.dart';
 export 'src/core/result.dart';
 export 'src/dialog/adaptive_dialog_page.dart';
 export 'src/dialog/confirm/confirm_dialog.dart';
