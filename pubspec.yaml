@@ -11,8 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   mobx: ^2.6.0
-  numberpicker: ^2.1.2
-  intl: any
+  flutter_hooks: ^0.21.3+1
 
 dev_dependencies:
   flutter_test:
