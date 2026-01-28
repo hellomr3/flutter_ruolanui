@@ -90,7 +90,7 @@ class OptionsContent extends StatelessWidget {
                 ),
               ),
               onTap: () {
-                Navigator.pop(context, Result.failure("Cancel"));
+                Navigator.pop(context);
               },
             )
           ],
