@@ -207,20 +207,6 @@ class _DemoPageState extends State<DemoPage> {
     );
   }
 
-  void _showConfirmDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => ConfirmDialog(
-        title: '确认操作',
-        content: '您确定要执行此操作吗？',
-        confirmText: '确定',
-        cancelText: '取消',
-        onConfirm: () => _showSnackbar('已确认操作'),
-        onCancel: () => _showSnackbar('已取消操作'),
-      ),
-    );
-  }
-
   void _showInputDialog() {
     showBottomInputDialog(
       context,
