@@ -24,4 +24,15 @@ class Option extends StatelessWidget {
       ],
     );
   }
+
+  _showAOptionsDialog(
+      {required List<String> options,
+      required BuildContext context,
+      int? value}) async {
+    final realOptions = List.generate(options.length,
+        (i) => OptionItem(id: i, label: options[i], desc: options[i]));
+
+    final r =
+        showOptionsDialog(context: context, options: realOptions, value: value);
+  }
 }
