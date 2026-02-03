@@ -2,6 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
+/// 时间选择器模式
+enum TimePickerMode {
+  /// 时分
+  hourMinute,
+  /// 时分秒
+  hourMinuteSecond,
+}
+
 /// 时间选择器文案配置
 class TimePickerLabels {
   final String title;
@@ -49,18 +57,18 @@ class TimePickerTheme {
 }
 
 /// 弹出时间选择器
-Future<TimeOfDay?> showTimePicker24(
+Future<DateTime?> showTimePicker24(
   BuildContext context, {
-  TimeOfDay? initTime,
-  bool showSecond = false,
+  DateTime? initTime,
+  TimePickerMode mode = TimePickerMode.hourMinute,
   TimePickerLabels? labels,
   TimePickerTheme? theme,
 }) async {
   final pickerLabels = labels ?? const TimePickerLabels();
   final pickerTheme = theme ?? const TimePickerTheme();
-  TimeOfDay? selectedTime = initTime;
+  DateTime? selectedTime = initTime;
 
-  return showModalBottomSheet<TimeOfDay>(
+  return showModalBottomSheet<DateTime>(
     context: context,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
@@ -79,9 +87,10 @@ Future<TimeOfDay?> showTimePicker24(
             onRightPressed: () => Navigator.pop(context, selectedTime),
           ),
           // 选择器
-          HourMinuteSecondPicker(
+          TimePickerWidget(
+            mode: mode,
             initTime: initTime,
-            showSecond: showSecond,
+            showSecond: mode == TimePickerMode.hourMinuteSecond,
             itemExtend: pickerTheme.itemHeight,
             itemCount: pickerTheme.visibleItemCount,
             selectedTextStyle: pickerTheme.selectedTextStyle,
@@ -101,8 +110,9 @@ Future<TimeOfDay?> showTimePicker24(
   );
 }
 
-class HourMinuteSecondPicker extends StatefulWidget {
-  final TimeOfDay? initTime;
+class TimePickerWidget extends StatefulWidget {
+  final TimePickerMode mode;
+  final DateTime? initTime;
   final bool showSecond;
   final double itemExtend;
   final int itemCount;
@@ -112,10 +122,11 @@ class HourMinuteSecondPicker extends StatefulWidget {
   final TimeFormatter? hourFormatter;
   final TimeFormatter? minuteFormatter;
   final TimeFormatter? secondFormatter;
-  final ValueChanged<TimeOfDay>? onChanged;
+  final ValueChanged<DateTime>? onChanged;
 
-  const HourMinuteSecondPicker({
+  const TimePickerWidget({
     super.key,
+    this.mode = TimePickerMode.hourMinute,
     this.initTime,
     this.showSecond = false,
     this.itemExtend = 44,
@@ -130,10 +141,10 @@ class HourMinuteSecondPicker extends StatefulWidget {
   });
 
   @override
-  State<HourMinuteSecondPicker> createState() => _HourMinuteSecondPickerState();
+  State<TimePickerWidget> createState() => _TimePickerWidgetState();
 }
 
-class _HourMinuteSecondPickerState extends State<HourMinuteSecondPicker> {
+class _TimePickerWidgetState extends State<TimePickerWidget> {
   late int selectedHour;
   late int selectedMinute;
   late int selectedSecond;
@@ -141,16 +152,18 @@ class _HourMinuteSecondPickerState extends State<HourMinuteSecondPicker> {
   @override
   void initState() {
     super.initState();
-    final init = widget.initTime ?? TimeOfDay.now();
+    final init = widget.initTime ?? DateTime.now();
     selectedHour = init.hour;
     selectedMinute = init.minute;
-    selectedSecond = 0;
+    selectedSecond = init.second;
     _notifyChange();
   }
 
   void _notifyChange() {
-    widget.onChanged
-        ?.call(TimeOfDay(hour: selectedHour, minute: selectedMinute));
+    final now = DateTime.now();
+    widget.onChanged?.call(
+      DateTime(now.year, now.month, now.day, selectedHour, selectedMinute, selectedSecond),
+    );
   }
 
   @override

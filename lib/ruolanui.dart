@@ -16,7 +16,7 @@ export 'src/dialog/two_pane_selector/selector_item.dart';
 export 'src/dialog/two_pane_selector/two_pane_selector_theme.dart';
 
 // 时间选择器
-export 'src/dialog/date_picker/ymd_picker.dart';
+export 'src/dialog/date_picker/date_picker.dart';
 export 'src/dialog/date_picker/time_picker.dart';
 
 // 按钮相关
