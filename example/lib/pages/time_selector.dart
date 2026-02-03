@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:ruolanui/ruolanui.dart';
 
 class TimeSelector extends StatefulWidget {
@@ -19,15 +20,36 @@ class _TimeSelectorState extends State<TimeSelector> {
         PrimaryBtn(
           label: "年月日选择器",
           onPressed: () async {
+            final cur = DateTime.now();
             final r = await showYearMonthDayPicker(context,
                 initDate: initDate, min: DateTime.now());
             if (r != null) {
               setState(() {
-                initDate = r;
+                initDate = (initDate ?? cur)
+                    .copyWith(year: cur.year, month: cur.month, day: cur.day);
               });
             }
           },
-        )
+        ),
+        PrimaryBtn(
+          label: "年月日选择器",
+          onPressed: () async {
+            final cur = DateTime.now();
+
+            final r = await showTimePicker24(
+              context,
+              initTime: TimeOfDay(
+                  hour: initDate?.hour ?? cur.hour,
+                  minute: initDate?.minute ?? cur.minute),
+            );
+            if (r != null) {
+              setState(() {
+                initDate =
+                    (initDate ?? cur).copyWith(hour: r.hour, minute: r.minute);
+              });
+            }
+          },
+        ),
       ],
     );
   }
