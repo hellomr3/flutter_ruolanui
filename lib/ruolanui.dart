@@ -31,5 +31,6 @@ export 'src/widgets/multiline_text_editor_page/multiline_text_editor_page.dart';
 
 // widgets
 export 'src/widgets/textfield/app_textfield.dart';
+export 'src/widgets/textfield/app_textfield.dart';
 export 'src/widgets/textfield/clear_input_textfield.dart';
 export 'src/widgets/textfield/observable_text_controller.dart';

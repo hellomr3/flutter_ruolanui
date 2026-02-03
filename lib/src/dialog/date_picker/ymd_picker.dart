@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
 /// 日期选择器文案配置
 class DatePickerLabels {
@@ -67,34 +68,15 @@ Future<DateTime?> showYearMonthDayPicker(
       borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
     ),
     builder: (context) {
-      final textTheme = Theme.of(context).textTheme;
-
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 标题栏
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Text(
-                    pickerLabels.cancel,
-                    style: textTheme.bodyMedium,
-                  ),
-                ),
-                Text(
-                  pickerLabels.title,
-                  style: textTheme.titleMedium,
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, selectedDate),
-                  child: Text(pickerLabels.confirm),
-                ),
-              ],
-            ),
+          BottomSheetHeader(
+            cancelText: pickerLabels.cancel,
+            titleText: pickerLabels.title,
+            confirmText: pickerLabels.confirm,
+            onRightPressed: () => Navigator.pop(context, selectedDate),
           ),
           // 选择器
           YearMonthDayPicker(
