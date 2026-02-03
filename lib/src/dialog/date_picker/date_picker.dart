@@ -3,6 +3,14 @@ import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
+/// 日期选择模式
+enum DatePickerMode {
+  /// 年月
+  yearMonth,
+  /// 年月日
+  yearMonthDay,
+}
+
 /// 日期选择器文案配置
 class DatePickerLabels {
   final String title;
@@ -49,12 +57,13 @@ class DatePickerTheme {
   });
 }
 
-/// 弹出年月日选择器
-Future<DateTime?> showYearMonthDayPicker(
+/// 弹出日期选择器
+Future<DateTime?> showRLDatePicker(
   BuildContext context, {
   DateTime? initDate,
   DateTime? min,
   DateTime? max,
+  DatePickerMode mode = DatePickerMode.yearMonthDay,
   DatePickerLabels? labels,
   DatePickerTheme? theme,
 }) async {
@@ -79,7 +88,8 @@ Future<DateTime?> showYearMonthDayPicker(
             onRightPressed: () => Navigator.pop(context, selectedDate),
           ),
           // 选择器
-          YearMonthDayPicker(
+          DatePickerWidget(
+            mode: mode,
             initDate: initDate,
             minDate: min,
             maxDate: max,
@@ -102,7 +112,8 @@ Future<DateTime?> showYearMonthDayPicker(
   );
 }
 
-class YearMonthDayPicker extends StatefulWidget {
+class DatePickerWidget extends StatefulWidget {
+  final DatePickerMode mode;
   final DateTime? initDate;
   final DateTime? minDate;
   final DateTime? maxDate;
@@ -116,8 +127,9 @@ class YearMonthDayPicker extends StatefulWidget {
   final DateFormatter? dayFormatter;
   final ValueChanged<DateTime>? onChanged;
 
-  const YearMonthDayPicker({
+  const DatePickerWidget({
     super.key,
+    this.mode = DatePickerMode.yearMonthDay,
     this.initDate,
     this.minDate,
     this.maxDate,
@@ -133,10 +145,10 @@ class YearMonthDayPicker extends StatefulWidget {
   });
 
   @override
-  State<YearMonthDayPicker> createState() => _YearMonthDayPickerState();
+  State<DatePickerWidget> createState() => _DatePickerWidgetState();
 }
 
-class _YearMonthDayPickerState extends State<YearMonthDayPicker> {
+class _DatePickerWidgetState extends State<DatePickerWidget> {
   late int selectedYear;
   late int selectedMonth;
   late int selectedDay;
@@ -198,8 +210,10 @@ class _YearMonthDayPickerState extends State<YearMonthDayPicker> {
   }
 
   void _notifyChange() {
-    // 确保日期在合法范围内后回调
-    widget.onChanged?.call(DateTime(selectedYear, selectedMonth, selectedDay));
+    final date = widget.mode == DatePickerMode.yearMonth
+        ? DateTime(selectedYear, selectedMonth)
+        : DateTime(selectedYear, selectedMonth, selectedDay);
+    widget.onChanged?.call(date);
   }
 
   void _handleDateUpdate() {
@@ -271,7 +285,8 @@ class _YearMonthDayPickerState extends State<YearMonthDayPicker> {
                   ),
                 ),
                 // 日
-                Expanded(
+                if (widget.mode == DatePickerMode.yearMonthDay)
+                  Expanded(
                   child: NumberPicker(
                     value: selectedDay,
                     minValue: minDay,
