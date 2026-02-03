@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
 /// 时间选择器文案配置
 class TimePickerLabels {
@@ -19,7 +20,9 @@ typedef TimeFormatter = String Function(int value);
 
 /// 默认时间格式化
 String _defaultHourFormatter(int hour) => '$hour时';
+
 String _defaultMinuteFormatter(int minute) => '$minute分';
+
 String _defaultSecondFormatter(int second) => '$second秒';
 
 /// 时间选择器主题配置
@@ -69,28 +72,11 @@ Future<TimeOfDay?> showTimePicker24(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 标题栏
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Text(
-                    pickerLabels.cancel,
-                    style: textTheme.bodyMedium,
-                  ),
-                ),
-                Text(
-                  pickerLabels.title,
-                  style: textTheme.titleMedium,
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, selectedTime),
-                  child: Text(pickerLabels.confirm),
-                ),
-              ],
-            ),
+          BottomSheetHeader(
+            cancelText: pickerLabels.cancel,
+            titleText: pickerLabels.title,
+            confirmText: pickerLabels.confirm,
+            onRightPressed: () => Navigator.pop(context, selectedTime),
           ),
           // 选择器
           HourMinuteSecondPicker(
@@ -163,7 +149,8 @@ class _HourMinuteSecondPickerState extends State<HourMinuteSecondPicker> {
   }
 
   void _notifyChange() {
-    widget.onChanged?.call(TimeOfDay(hour: selectedHour, minute: selectedMinute));
+    widget.onChanged
+        ?.call(TimeOfDay(hour: selectedHour, minute: selectedMinute));
   }
 
   @override
