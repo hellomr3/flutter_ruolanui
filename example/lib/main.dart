@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ruolanui_example/pages/date_page/calendar_selector.dart';
 import 'package:ruolanui_example/pages/date_page/date_page.dart';
 
 import 'demo_page.dart';
@@ -60,7 +61,7 @@ class RuolanUIExampleApp extends StatelessWidget {
           secondaryContainer: const Color(0xFFF2F2F7),
         ),
       ),
-      home: DatePage(),
+      home: CalendarSelectorExample(),
     );
   }
 }
