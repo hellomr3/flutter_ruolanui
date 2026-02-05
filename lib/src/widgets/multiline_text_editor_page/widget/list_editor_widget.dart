@@ -62,6 +62,8 @@ class ListEditorWidgetState extends State<ListEditorWidget>
   @override
   TextEditingController get listController => _controller;
 
+  FocusNode get listFocusNode => widget.focusNode;
+
   @override
   void onListStateChanged(bool isOrdered, bool isUnordered) {
     widget.onListStateChanged?.call(isOrdered, isUnordered);
