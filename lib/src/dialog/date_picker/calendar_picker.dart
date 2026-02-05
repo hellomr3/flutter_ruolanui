@@ -308,12 +308,20 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     final isToday = date.year == DateTime.now().year &&
         date.month == DateTime.now().month &&
         date.day == DateTime.now().day;
-    final isDisabled = !isCurrentMonth ||
-        (widget.minDate != null && date.isBefore(widget.minDate!)) ||
+    final isDisabled = (widget.minDate != null && date.isBefore(widget.minDate!)) ||
         (widget.maxDate != null && date.isAfter(widget.maxDate!));
 
     return GestureDetector(
-      onTap: isDisabled ? null : () => _selectDate(date),
+      onTap: isDisabled
+          ? null
+          : () {
+              if (!isCurrentMonth) {
+                setState(() {
+                  _displayMonth = DateTime(date.year, date.month);
+                });
+              }
+              _selectDate(date);
+            },
       child: Container(
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
@@ -332,7 +340,9 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                   ? colorScheme.onPrimary
                   : isDisabled
                       ? colorScheme.onSurface.withOpacity(0.3)
-                      : colorScheme.onSurface,
+                      : !isCurrentMonth
+                          ? colorScheme.onSurface.withOpacity(0.4)
+                          : colorScheme.onSurface,
               fontWeight: isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
             ),
           ),

@@ -6,7 +6,8 @@ class CalendarSelectorExample extends StatefulWidget {
   const CalendarSelectorExample({super.key});
 
   @override
-  State<CalendarSelectorExample> createState() => _CalendarSelectorExampleState();
+  State<CalendarSelectorExample> createState() =>
+      _CalendarSelectorExampleState();
 }
 
 class _CalendarSelectorExampleState extends State<CalendarSelectorExample> {
