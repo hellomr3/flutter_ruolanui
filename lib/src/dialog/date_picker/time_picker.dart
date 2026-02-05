@@ -66,7 +66,7 @@ Future<DateTime?> showTimePicker24(
 }) async {
   final pickerLabels = labels ?? const TimePickerLabels();
   final pickerTheme = theme ?? const TimePickerTheme();
-  DateTime? selectedTime = initTime;
+  DateTime? selectedTime;
 
   return showModalBottomSheet<DateTime>(
     context: context,
@@ -243,6 +243,7 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
                       onChanged: (v) {
                         setState(() {
                           selectedSecond = v;
+                          _notifyChange();
                         });
                       },
                       textMapper: (i) => secondFormatter(int.parse(i)),
