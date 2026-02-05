@@ -23,12 +23,14 @@ class _TimeSelectorState extends State<TimeSelector> {
             final cur = DateTime.now();
             final r = await showRLDatePicker(context,
                 mode: DatePickerMode.yearMonthDay,
-                initDate: initDate,
+                initDate: initDate??DateTime.now(),
                 min: DateTime.now());
             if (r != null) {
+              print('选择时间为B$r');
               setState(() {
                 initDate = (initDate ?? cur)
-                    .copyWith(year: cur.year, month: cur.month, day: cur.day);
+                    .copyWith(year: r.year, month: r.month, day: r.day);
+                print('initDate$initDate');
               });
             }
           },

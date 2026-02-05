@@ -69,7 +69,7 @@ Future<DateTime?> showRLDatePicker(
 }) async {
   final pickerLabels = labels ?? const DatePickerLabels();
   final pickerTheme = theme ?? const DatePickerTheme();
-  DateTime? selectedDate = initDate;
+  DateTime? selectedDate;
 
   return showModalBottomSheet<DateTime>(
     context: context,
@@ -251,6 +251,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 // 年
                 Expanded(
                   child: NumberPicker(
+                    key: ValueKey('year_$minYear-$maxYear'),
                     value: selectedYear,
                     minValue: minYear,
                     maxValue: maxYear,
@@ -269,6 +270,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 // 月
                 Expanded(
                   child: NumberPicker(
+                    key: ValueKey('month_$minMonth-$maxMonth'),
                     value: selectedMonth,
                     minValue: minMonth,
                     maxValue: maxMonth,
@@ -288,6 +290,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 if (widget.mode == DatePickerMode.yearMonthDay)
                   Expanded(
                   child: NumberPicker(
+                    key: ValueKey('day_$minDay-$maxDay'),
                     value: selectedDay,
                     minValue: minDay,
                     maxValue: maxDay,
