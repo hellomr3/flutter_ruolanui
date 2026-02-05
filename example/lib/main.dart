@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ruolanui_example/pages/date_page/calendar_selector.dart';
 import 'package:ruolanui_example/pages/date_page/date_page.dart';
 
@@ -22,6 +23,16 @@ class RuolanUIExampleApp extends StatelessWidget {
     return MaterialApp(
       title: 'RuolanUI Example',
       debugShowCheckedModeBanner: false,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('zh', 'CN'),
+        Locale('en', 'US'),
+      ],
+      locale: const Locale('zh', 'CN'),
       theme: ThemeData(
         brightness: Brightness.light,
         useMaterial3: true,
