@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide DatePickerMode;
 import 'package:intl/intl.dart';
 import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
+
+import 'date_picker.dart';
 
 /// 时间段类型
 enum PeriodType {
@@ -176,14 +178,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          BottomSheetHeader(
-            cancelText: widget.labels.cancel,
-            titleText: widget.labels.title,
-            confirmText: widget.labels.confirm,
-            onLeftPressed: widget.onCancel,
-            onRightPressed: widget.onConfirm,
-          ),
-          _buildMonthNavigation(colorScheme, textTheme),
+          _buildHeader(colorScheme, textTheme),
           _buildWeekdayHeader(colorScheme, textTheme),
           Flexible(child: _buildCalendarGrid(colorScheme, textTheme)),
           if (widget.showPeriodButtons)
@@ -194,25 +189,74 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     );
   }
 
-  Widget _buildMonthNavigation(ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildHeader(ColorScheme colorScheme, TextTheme textTheme) {
     final locale = Localizations.localeOf(context).toString();
     
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          GestureDetector(
+            onTap: widget.onCancel,
+            behavior: HitTestBehavior.translucent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Text(
+                widget.labels.cancel,
+                style: textTheme.bodyMedium,
+              ),
+            ),
+          ),
+          const Spacer(),
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () => _changeMonth(-1),
           ),
-          Text(
-            DateFormat.yMMMM(locale).format(_displayMonth),
-            style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          InkWell(
+            onTap: () async {
+              final result = await showRLDatePicker(
+                context,
+                initDate: _displayMonth,
+                min: widget.minDate,
+                max: widget.maxDate,
+                mode: DatePickerMode.yearMonth,
+              );
+              if (result != null) {
+                setState(() {
+                  _displayMonth = DateTime(result.year, result.month);
+                });
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    DateFormat.yMMMM(locale).format(_displayMonth),
+                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_drop_down, size: 20, color: colorScheme.onSurface),
+                ],
+              ),
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () => _changeMonth(1),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: widget.onConfirm,
+            behavior: HitTestBehavior.translucent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Text(
+                widget.labels.confirm,
+                style: textTheme.bodyMedium?.copyWith(color: textTheme.titleMedium?.color),
+              ),
+            ),
           ),
         ],
       ),
