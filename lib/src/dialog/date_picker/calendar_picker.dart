@@ -224,7 +224,9 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
               if (result != null) {
                 setState(() {
                   _displayMonth = DateTime(result.year, result.month);
+                  _selectedDate = DateTime(result.year, result.month, _selectedDate.day.clamp(1, DateTime(result.year, result.month + 1, 0).day));
                 });
+                widget.onChanged?.call(_selectedDate);
               }
             },
             child: Padding(
