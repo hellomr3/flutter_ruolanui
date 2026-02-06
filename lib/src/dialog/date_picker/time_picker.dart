@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:ruolanui/ruolanui.dart';
 import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
 /// 时间选择器模式
 enum TimePickerMode {
   /// 时分
   hourMinute,
+
   /// 时分秒
   hourMinuteSecond,
 }
@@ -57,7 +59,7 @@ class TimePickerTheme {
 }
 
 /// 弹出时间选择器
-Future<DateTime?> showTimePicker24(
+Future<Result<DateTime>?> showTimePicker24(
   BuildContext context, {
   DateTime? initTime,
   TimePickerMode mode = TimePickerMode.hourMinute,
@@ -68,7 +70,7 @@ Future<DateTime?> showTimePicker24(
   final pickerTheme = theme ?? const TimePickerTheme();
   DateTime? selectedTime;
 
-  return showModalBottomSheet<DateTime>(
+  return showModalBottomSheet<Result<DateTime>>(
     context: context,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
@@ -162,7 +164,8 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
   void _notifyChange() {
     final now = DateTime.now();
     widget.onChanged?.call(
-      DateTime(now.year, now.month, now.day, selectedHour, selectedMinute, selectedSecond),
+      DateTime(now.year, now.month, now.day, selectedHour, selectedMinute,
+          selectedSecond),
     );
   }
 

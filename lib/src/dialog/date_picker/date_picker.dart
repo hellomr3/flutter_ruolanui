@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:numberpicker/numberpicker.dart';
+import 'package:ruolanui/ruolanui.dart';
 import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
 /// 日期选择模式
 enum DatePickerMode {
   /// 年月
   yearMonth,
+
   /// 年月日
   yearMonthDay,
 }
@@ -58,7 +59,7 @@ class DatePickerTheme {
 }
 
 /// 弹出日期选择器
-Future<DateTime?> showRLDatePicker(
+Future<Result<DateTime>?> showRLDatePicker(
   BuildContext context, {
   DateTime? initDate,
   DateTime? min,
@@ -71,7 +72,7 @@ Future<DateTime?> showRLDatePicker(
   final pickerTheme = theme ?? const DatePickerTheme();
   DateTime? selectedDate;
 
-  return showModalBottomSheet<DateTime>(
+  return showModalBottomSheet<Result<DateTime>>(
     context: context,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
@@ -85,7 +86,8 @@ Future<DateTime?> showRLDatePicker(
             cancelText: pickerLabels.cancel,
             titleText: pickerLabels.title,
             confirmText: pickerLabels.confirm,
-            onRightPressed: () => Navigator.pop(context, selectedDate),
+            onRightPressed: () =>
+                Navigator.pop(context, Result.success(selectedDate)),
           ),
           // 选择器
           DatePickerWidget(
@@ -289,23 +291,23 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 // 日
                 if (widget.mode == DatePickerMode.yearMonthDay)
                   Expanded(
-                  child: NumberPicker(
-                    key: ValueKey('day_$minDay-$maxDay'),
-                    value: selectedDay,
-                    minValue: minDay,
-                    maxValue: maxDay,
-                    itemHeight: widget.itemExtend,
-                    itemCount: widget.itemCount,
-                    selectedTextStyle: selectedStyle,
-                    textStyle: unselectedStyle,
-                    haptics: true,
-                    onChanged: (v) {
-                      selectedDay = v;
-                      _handleDateUpdate();
-                    },
-                    textMapper: (i) => dayFormatter(int.parse(i)),
+                    child: NumberPicker(
+                      key: ValueKey('day_$minDay-$maxDay'),
+                      value: selectedDay,
+                      minValue: minDay,
+                      maxValue: maxDay,
+                      itemHeight: widget.itemExtend,
+                      itemCount: widget.itemCount,
+                      selectedTextStyle: selectedStyle,
+                      textStyle: unselectedStyle,
+                      haptics: true,
+                      onChanged: (v) {
+                        selectedDay = v;
+                        _handleDateUpdate();
+                      },
+                      textMapper: (i) => dayFormatter(int.parse(i)),
+                    ),
                   ),
-                ),
               ],
             ),
             // 选中框遮罩
