@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart' hide DatePickerMode;
 import 'package:intl/intl.dart';
-
-import 'date_picker.dart';
+import 'package:ruolanui/ruolanui.dart';
 
 /// 时间段类型
 enum PeriodType {
@@ -54,7 +53,7 @@ class CalendarPickerLabels {
 }
 
 /// 弹出日历选择器
-Future<DateTime?> showRLCalendarPicker(
+Future<Result<DateTime>?> showRLCalendarPicker(
   BuildContext context, {
   DateTime? initDate,
   DateTime? minDate,
@@ -66,7 +65,7 @@ Future<DateTime?> showRLCalendarPicker(
   final pickerLabels = labels ?? const CalendarPickerLabels();
   DateTime? selectedDate;
 
-  return showModalBottomSheet<DateTime?>(
+  return showModalBottomSheet<Result<DateTime>>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
@@ -81,7 +80,7 @@ Future<DateTime?> showRLCalendarPicker(
         labels: pickerLabels,
         showPeriodButtons: showPeriodButtons,
         onChanged: (date) => selectedDate = date,
-        onConfirm: () => Navigator.pop(context, selectedDate),
+        onConfirm: () => Navigator.pop(context, Result.success(selectedDate)),
         onCancel: () => Navigator.pop(context),
       );
     },
@@ -95,7 +94,7 @@ class CalendarPickerWidget extends StatefulWidget {
   final List<PeriodOption> periodOptions;
   final CalendarPickerLabels labels;
   final bool showPeriodButtons;
-  final ValueChanged<DateTime>? onChanged;
+  final ValueChanged<DateTime?>? onChanged;
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
 
@@ -441,7 +440,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                 return TextButton(
                   onPressed: () {
                     if (option.type == PeriodType.noDate) {
-                      Navigator.pop(context, null);
+                      widget.onChanged?.call(null);
                     } else if (option.type == PeriodType.today) {
                       final today = _clampDateToRange(DateTime.now());
                       setState(() {
