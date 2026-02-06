@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart' hide DatePickerMode;
 import 'package:intl/intl.dart';
-import 'package:ruolanui/src/widgets/bottom_sheet_header.dart';
 
 import 'date_picker.dart';
 
@@ -142,7 +141,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     } else {
       date = addPeriod(_selectedDate, option);
     }
-    
+
     date = _clampDateToRange(date);
     setState(() {
       _selectedDate = date;
@@ -195,7 +194,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
 
   Widget _buildHeader(ColorScheme colorScheme, TextTheme textTheme) {
     final locale = Localizations.localeOf(context).toString();
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       child: Row(
@@ -228,7 +227,11 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
               if (result != null) {
                 setState(() {
                   _displayMonth = DateTime(result.year, result.month);
-                  _selectedDate = DateTime(result.year, result.month, _selectedDate.day.clamp(1, DateTime(result.year, result.month + 1, 0).day));
+                  _selectedDate = DateTime(
+                      result.year,
+                      result.month,
+                      _selectedDate.day.clamp(
+                          1, DateTime(result.year, result.month + 1, 0).day));
                 });
                 widget.onChanged?.call(_selectedDate);
               }
@@ -240,10 +243,12 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                 children: [
                   Text(
                     DateFormat.yMMMM(locale).format(_displayMonth),
-                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(width: 4),
-                  Icon(Icons.arrow_drop_down, size: 20, color: colorScheme.onSurface),
+                  Icon(Icons.arrow_drop_down,
+                      size: 20, color: colorScheme.onSurface),
                 ],
               ),
             ),
@@ -260,7 +265,8 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               child: Text(
                 widget.labels.confirm,
-                style: textTheme.bodyMedium?.copyWith(color: textTheme.titleMedium?.color),
+                style: textTheme.bodyMedium
+                    ?.copyWith(color: textTheme.titleMedium?.color),
               ),
             ),
           ),
@@ -297,14 +303,17 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
   }
 
   Widget _buildCalendarGrid(ColorScheme colorScheme, TextTheme textTheme) {
-    final firstDayOfMonth = DateTime(_displayMonth.year, _displayMonth.month, 1);
-    final lastDayOfMonth = DateTime(_displayMonth.year, _displayMonth.month + 1, 0);
+    final firstDayOfMonth =
+        DateTime(_displayMonth.year, _displayMonth.month, 1);
+    final lastDayOfMonth =
+        DateTime(_displayMonth.year, _displayMonth.month + 1, 0);
     final firstWeekday = firstDayOfMonth.weekday % 7;
 
     final days = <Widget>[];
 
     final prevMonth = DateTime(_displayMonth.year, _displayMonth.month - 1);
-    final lastDayOfPrevMonth = DateTime(_displayMonth.year, _displayMonth.month, 0);
+    final lastDayOfPrevMonth =
+        DateTime(_displayMonth.year, _displayMonth.month, 0);
     for (int i = firstWeekday - 1; i >= 0; i--) {
       final day = lastDayOfPrevMonth.day - i;
       days.add(_buildDayCell(
@@ -358,8 +367,9 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     final isToday = date.year == DateTime.now().year &&
         date.month == DateTime.now().month &&
         date.day == DateTime.now().day;
-    final isDisabled = (widget.minDate != null && date.isBefore(widget.minDate!)) ||
-        (widget.maxDate != null && date.isAfter(widget.maxDate!));
+    final isDisabled =
+        (widget.minDate != null && date.isBefore(widget.minDate!)) ||
+            (widget.maxDate != null && date.isAfter(widget.maxDate!));
 
     return GestureDetector(
       onTap: isDisabled
@@ -393,7 +403,8 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                       : !isCurrentMonth
                           ? colorScheme.onSurface.withOpacity(0.4)
                           : colorScheme.onSurface,
-              fontWeight: isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
+              fontWeight:
+                  isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ),
@@ -411,6 +422,17 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
+          IconButton(
+            icon: Icon(_isCalendarMode ? Icons.list : Icons.calendar_month),
+            onPressed: () {
+              setState(() {
+                _isCalendarMode = !_isCalendarMode;
+              });
+            },
+          ),
+          SizedBox(
+            width: 8,
+          ),
           Expanded(
             child: Wrap(
               spacing: 8,
@@ -432,11 +454,13 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                     }
                   },
                   style: TextButton.styleFrom(
-                    backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    backgroundColor:
+                        colorScheme.surfaceContainerHighest.withOpacity(0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   ),
                   child: Text(
                     option.label,
@@ -448,15 +472,6 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                 );
               }).toList(),
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: Icon(_isCalendarMode ? Icons.view_list : Icons.calendar_month),
-            onPressed: () {
-              setState(() {
-                _isCalendarMode = !_isCalendarMode;
-              });
-            },
           ),
         ],
       ),
