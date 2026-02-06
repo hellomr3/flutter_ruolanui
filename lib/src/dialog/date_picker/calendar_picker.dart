@@ -223,14 +223,15 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                 max: widget.maxDate,
                 mode: DatePickerMode.yearMonth,
               );
-              if (result != null) {
+              final newDate = result?.data;
+              if (newDate != null) {
                 setState(() {
-                  _displayMonth = DateTime(result.year, result.month);
+                  _displayMonth = DateTime(newDate.year, newDate.month);
                   _selectedDate = DateTime(
-                      result.year,
-                      result.month,
+                      newDate.year,
+                      newDate.month,
                       _selectedDate.day.clamp(
-                          1, DateTime(result.year, result.month + 1, 0).day));
+                          1, DateTime(newDate.year, newDate.month + 1, 0).day));
                 });
                 widget.onChanged?.call(_selectedDate);
               }
