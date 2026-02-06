@@ -120,6 +120,7 @@ class CalendarPickerWidget extends StatefulWidget {
 class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
   late DateTime _displayMonth;
   late DateTime _selectedDate;
+  bool _isCalendarMode = true;
 
   @override
   void initState() {
@@ -179,8 +180,11 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildHeader(colorScheme, textTheme),
-          _buildWeekdayHeader(colorScheme, textTheme),
-          Flexible(child: _buildCalendarGrid(colorScheme, textTheme)),
+          if (_isCalendarMode) ...[
+            _buildWeekdayHeader(colorScheme, textTheme),
+            Flexible(child: _buildCalendarGrid(colorScheme, textTheme)),
+          ] else
+            Flexible(child: _buildDatePicker(colorScheme, textTheme)),
           if (widget.showPeriodButtons)
             _buildQuickButtons(colorScheme, textTheme),
           SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
@@ -405,42 +409,72 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
 
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: allOptions.map((option) {
-          return TextButton(
+      child: Row(
+        children: [
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: allOptions.map((option) {
+                return TextButton(
+                  onPressed: () {
+                    if (option.type == PeriodType.noDate) {
+                      Navigator.pop(context, null);
+                    } else if (option.type == PeriodType.today) {
+                      final today = _clampDateToRange(DateTime.now());
+                      setState(() {
+                        _selectedDate = today;
+                        _displayMonth = DateTime(today.year, today.month);
+                      });
+                      widget.onChanged?.call(today);
+                    } else {
+                      _selectPeriodOption(option);
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  child: Text(
+                    option.label,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(_isCalendarMode ? Icons.view_list : Icons.calendar_month),
             onPressed: () {
-              if (option.type == PeriodType.noDate) {
-                Navigator.pop(context, null);
-              } else if (option.type == PeriodType.today) {
-                final today = _clampDateToRange(DateTime.now());
-                setState(() {
-                  _selectedDate = today;
-                  _displayMonth = DateTime(today.year, today.month);
-                });
-                widget.onChanged?.call(today);
-              } else {
-                _selectPeriodOption(option);
-              }
+              setState(() {
+                _isCalendarMode = !_isCalendarMode;
+              });
             },
-            style: TextButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
-            child: Text(
-              option.label,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          );
-        }).toList(),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildDatePicker(ColorScheme colorScheme, TextTheme textTheme) {
+    return DatePickerWidget(
+      key: ValueKey('date_picker_${_selectedDate.millisecondsSinceEpoch}'),
+      mode: DatePickerMode.yearMonthDay,
+      initDate: _selectedDate,
+      minDate: widget.minDate,
+      maxDate: widget.maxDate,
+      onChanged: (date) {
+        _selectedDate = date;
+        _displayMonth = DateTime(date.year, date.month);
+        widget.onChanged?.call(date);
+      },
     );
   }
 }
