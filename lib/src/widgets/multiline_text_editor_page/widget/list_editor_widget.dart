@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../mixin/list_editor_mixin.dart';
 
 /// 列表编辑器组件
@@ -141,6 +142,8 @@ class ListEditorWidgetState extends State<ListEditorWidget>
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     final textField = TextField(
       controller: _controller,
       focusNode: widget.focusNode,
@@ -154,11 +157,7 @@ class ListEditorWidgetState extends State<ListEditorWidget>
         contentPadding: EdgeInsets.zero,
         isDense: true,
       ),
-      style: const TextStyle(
-        fontSize: 15,
-        color: Colors.black87,
-        height: 1.6,
-      ),
+      style: textTheme.titleMedium,
       strutStyle: const StrutStyle(
         fontSize: 15,
         height: 1.6,
