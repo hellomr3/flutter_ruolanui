@@ -4,6 +4,39 @@ import 'widget/list_editor_widget.dart';
 import 'widget/list_toolbar.dart';
 import 'widget/word_count_indicator.dart';
 
+/// 多行文本编辑器国际化配置
+class MultilineEditorLocale {
+  /// 确定按钮文本
+  final String confirm;
+
+  /// 清空按钮文本
+  final String clear;
+
+  /// 默认标题
+  final String defaultTitle;
+
+  /// 默认占位符
+  final String defaultPlaceholder;
+
+  const MultilineEditorLocale({
+    this.confirm = '确定',
+    this.clear = '清空',
+    this.defaultTitle = '编辑内容',
+    this.defaultPlaceholder = '请输入内容...',
+  });
+
+  /// 创建中文配置
+  const MultilineEditorLocale.zh() : this();
+
+  /// 创建英文配置
+  static const MultilineEditorLocale en = MultilineEditorLocale(
+    confirm: 'Confirm',
+    clear: 'Clear',
+    defaultTitle: 'Edit Content',
+    defaultPlaceholder: 'Please enter content...',
+  );
+}
+
 /// 多行文本编辑器主题配置
 class MultilineEditorTheme {
   /// 背景色
@@ -69,13 +102,13 @@ class MultilineEditorTheme {
 /// 底部工具栏可切换列表模式，显示字数统计。
 class MultilineTextEditorPage extends StatefulWidget {
   /// 标题
-  final String title;
+  final String? title;
 
   /// 副标题
   final String? subTitle;
 
   /// 占位符
-  final String placeholder;
+  final String? placeholder;
 
   /// 最大输入字数
   final int maxInputCount;
@@ -86,14 +119,18 @@ class MultilineTextEditorPage extends StatefulWidget {
   /// 主题配置
   final MultilineEditorTheme theme;
 
+  /// 国际化配置
+  final MultilineEditorLocale locale;
+
   const MultilineTextEditorPage({
     super.key,
-    this.title = '编辑内容',
+    this.title,
     this.subTitle,
-    this.placeholder = '请输入内容...',
+    this.placeholder,
     this.maxInputCount = 500,
     this.initialText = '',
     this.theme = const MultilineEditorTheme.defaultTheme(),
+    this.locale = const MultilineEditorLocale.zh(),
   });
 
   @override
@@ -204,7 +241,7 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.title,
+                widget.title ?? widget.locale.defaultTitle,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -229,7 +266,7 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
           TextButton(
             onPressed: _handleConfirmTap,
             child: Text(
-              '确定',
+              widget.locale.confirm,
               style: TextStyle(
                 fontSize: 15,
                 color: _currentText.isNotEmpty
@@ -250,7 +287,7 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
                 child: ListEditorWidget(
                   key: _editorKey,
                   text: widget.initialText,
-                  placeholder: widget.placeholder,
+                  placeholder: widget.placeholder ?? widget.locale.defaultPlaceholder,
                   focusNode: _focusNode,
                   maxInputCount: widget.maxInputCount,
                   enableList: true,
@@ -300,7 +337,7 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
                         vertical: 4,
                       ),
                       child: Text(
-                        '清空',
+                        widget.locale.clear,
                         style: TextStyle(
                           fontSize: 14,
                           color: _currentText.isNotEmpty
