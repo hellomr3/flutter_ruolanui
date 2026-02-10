@@ -21,20 +21,14 @@ class MultilineEditorTheme {
   /// 返回按钮颜色
   final Color backIconColor;
 
-  /// 确定按钮颜色
-  final Color confirmButtonColor;
+  /// 主色（确定按钮、清空按钮、工具栏激活状态）
+  final Color primaryColor;
 
-  /// 确定按钮禁用颜色
-  final Color confirmButtonDisabledColor;
+  /// 禁用态颜色
+  final Color disabledColor;
 
   /// 底部工具栏背景色
   final Color toolbarBackgroundColor;
-
-  /// 清空按钮颜色
-  final Color clearButtonColor;
-
-  /// 清空按钮禁用颜色
-  final Color clearButtonDisabledColor;
 
   const MultilineEditorTheme({
     this.backgroundColor = Colors.white,
@@ -42,11 +36,9 @@ class MultilineEditorTheme {
     this.titleColor = const Color(0xFF424242),
     this.subTitleColor = const Color(0xFF787878),
     this.backIconColor = const Color(0xFF424242),
-    this.confirmButtonColor = const Color(0xFF0052D9),
-    this.confirmButtonDisabledColor = const Color(0xFFBBBBBB),
+    this.primaryColor = const Color(0xFF0052D9),
+    this.disabledColor = const Color(0xFFBBBBBB),
     this.toolbarBackgroundColor = Colors.white,
-    this.clearButtonColor = const Color(0xFF0052D9),
-    this.clearButtonDisabledColor = const Color(0xFFBBBBBB),
   });
 
   /// 创建默认主题
@@ -64,11 +56,9 @@ class MultilineEditorTheme {
       titleColor: colorScheme.onSurface,
       subTitleColor: colorScheme.onSurface.withOpacity(0.6),
       backIconColor: colorScheme.onSurface,
-      confirmButtonColor: colorScheme.primary,
-      confirmButtonDisabledColor: colorScheme.onSurface.withOpacity(0.38),
+      primaryColor: colorScheme.primary,
+      disabledColor: colorScheme.onSurface.withOpacity(0.38),
       toolbarBackgroundColor: colorScheme.surface,
-      clearButtonColor: colorScheme.primary,
-      clearButtonDisabledColor: colorScheme.onSurface.withOpacity(0.38),
     );
   }
 }
@@ -237,92 +227,94 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
         titleSpacing: 0,
         actions: [
           TextButton(
-            onPressed: _currentText.isNotEmpty ? _handleConfirmTap : null,
+            onPressed: _handleConfirmTap,
             child: Text(
               '确定',
               style: TextStyle(
                 fontSize: 15,
                 color: _currentText.isNotEmpty
-                    ? themeConfig.confirmButtonColor
-                    : themeConfig.confirmButtonDisabledColor,
+                    ? themeConfig.primaryColor
+                    : themeConfig.disabledColor,
               ),
             ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // 编辑器区域
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ListEditorWidget(
-                key: _editorKey,
-                text: widget.initialText,
-                placeholder: widget.placeholder,
-                focusNode: _focusNode,
-                maxInputCount: widget.maxInputCount,
-                enableList: true,
-                onChanged: _onTextChanged,
-                onListStateChanged: _onListStateChanged,
-                onTapOutside: _handleTapOutside,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 编辑器区域
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ListEditorWidget(
+                  key: _editorKey,
+                  text: widget.initialText,
+                  placeholder: widget.placeholder,
+                  focusNode: _focusNode,
+                  maxInputCount: widget.maxInputCount,
+                  enableList: true,
+                  onChanged: _onTextChanged,
+                  onListStateChanged: _onListStateChanged,
+                  onTapOutside: _handleTapOutside,
+                ),
               ),
             ),
-          ),
-          // 底部区域：字数统计 + 工具栏
-          Column(
-            children: [
-              // 字数统计 + 清空按钮
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    WordCountIndicator(
-                      currentLength: _currentText.length,
-                      maxLength: widget.maxInputCount,
+            // 底部区域：工具栏 + 字数统计 + 清空按钮
+            Container(
+              height: 48,
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: themeConfig.toolbarBackgroundColor,
+              ),
+              child: Row(
+                children: [
+                  // 工具栏
+                  Expanded(
+                    child: ListToolbar(
+                      key: _toolbarKey,
+                      showOrdered: true,
+                      showUnordered: true,
+                      isOrderedActive: _isOrderedActive,
+                      isUnorderedActive: _isUnorderedActive,
+                      primaryColor: themeConfig.primaryColor,
+                      onOrderedListToggle: () =>
+                          _editorKey.currentState?.toggleOrderedList(),
+                      onUnorderedListToggle: () =>
+                          _editorKey.currentState?.toggleUnorderedList(),
                     ),
-                    const SizedBox(width: 16),
-                    InkWell(
-                      onTap: _currentText.isNotEmpty ? _handleClearTap : null,
-                      borderRadius: BorderRadius.circular(4),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          '清空',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _currentText.isNotEmpty
-                                ? themeConfig.clearButtonColor
-                                : themeConfig.clearButtonDisabledColor,
-                          ),
+                  ),
+                  // 字数统计
+                  WordCountIndicator(
+                    currentLength: _currentText.length,
+                    maxLength: widget.maxInputCount,
+                  ),
+                  const SizedBox(width: 12),
+                  // 清空按钮
+                  InkWell(
+                    onTap: _currentText.isNotEmpty ? _handleClearTap : null,
+                    borderRadius: BorderRadius.circular(4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      child: Text(
+                        '清空',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _currentText.isNotEmpty
+                              ? themeConfig.primaryColor
+                              : themeConfig.disabledColor,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              // 工具栏
-              ListToolbar(
-                key: _toolbarKey,
-                showOrdered: true,
-                showUnordered: true,
-                isOrderedActive: _isOrderedActive,
-                isUnorderedActive: _isUnorderedActive,
-                onOrderedListToggle: () =>
-                    _editorKey.currentState?.toggleOrderedList(),
-                onUnorderedListToggle: () =>
-                    _editorKey.currentState?.toggleUnorderedList(),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -25,6 +25,9 @@ class ListToolbar extends StatefulWidget {
   /// 工具栏高度
   final double? height;
 
+  /// 主色
+  final Color primaryColor;
+
   const ListToolbar({
     super.key,
     this.showOrdered = true,
@@ -34,6 +37,7 @@ class ListToolbar extends StatefulWidget {
     this.onOrderedListToggle,
     this.onUnorderedListToggle,
     this.height,
+    this.primaryColor = const Color(0xFF0052D9),
   });
 
   @override
@@ -51,18 +55,8 @@ class ListToolbarState extends State<ListToolbar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: widget.height ?? 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Colors.grey[300]!,
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           if (widget.showOrdered)
@@ -70,6 +64,7 @@ class ListToolbarState extends State<ListToolbar> {
               key: _orderedButtonKey,
               icon: Icons.format_list_numbered,
               isActive: widget.isOrderedActive,
+              primaryColor: widget.primaryColor,
               onTap: widget.onOrderedListToggle ?? () {},
             ),
           if (widget.showOrdered && widget.showUnordered)
@@ -79,6 +74,7 @@ class ListToolbarState extends State<ListToolbar> {
               key: _unorderedButtonKey,
               icon: Icons.format_list_bulleted,
               isActive: widget.isUnorderedActive,
+              primaryColor: widget.primaryColor,
               onTap: widget.onUnorderedListToggle ?? () {},
             ),
           const Spacer(),
@@ -92,12 +88,14 @@ class ListToolbarState extends State<ListToolbar> {
 class _ToolbarButton extends StatelessWidget {
   final IconData icon;
   final bool isActive;
+  final Color primaryColor;
   final VoidCallback onTap;
 
   const _ToolbarButton({
     super.key,
     required this.icon,
     required this.isActive,
+    required this.primaryColor,
     required this.onTap,
   });
 
@@ -105,6 +103,7 @@ class _ToolbarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     const buttonSize = 32.0;
     const borderRadius = 6.0;
+    final textTheme = Theme.of(context).textTheme;
 
     return InkWell(
       onTap: onTap,
@@ -113,11 +112,11 @@ class _ToolbarButton extends StatelessWidget {
         width: buttonSize,
         height: buttonSize,
         decoration: BoxDecoration(
-          color: isActive ? Colors.blue.withOpacity(0.1) : Colors.transparent,
+          color: isActive ? primaryColor.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(borderRadius),
           border: isActive
               ? Border.all(
-                  color: Colors.blue.withOpacity(0.3),
+                  color: primaryColor.withOpacity(0.3),
                   width: 1,
                 )
               : null,
@@ -125,7 +124,7 @@ class _ToolbarButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 18,
-          color: isActive ? Colors.blue : Colors.grey[700],
+          color: isActive ? primaryColor : textTheme.titleMedium!.color,
         ),
       ),
     );
