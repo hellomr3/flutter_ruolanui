@@ -31,7 +31,7 @@ mixin EventHandlerMixin<T extends StatefulWidget, E> on State<T> {
   void dispose() {
     _eventSubscription?.cancel();
     _eventSubscription = null;
-    vm.dispose();
+    vm.disposeEvent();
     super.dispose();
   }
 }

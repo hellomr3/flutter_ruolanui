@@ -15,7 +15,7 @@ mixin EventStateMixin<T> {
     _eventController!.add(event);
   }
 
-  void dispose() {
+  void disposeEvent() {
     _eventController?.close();
     _eventController = null;
   }
