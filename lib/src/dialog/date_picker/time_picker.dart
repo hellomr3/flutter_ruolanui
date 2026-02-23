@@ -86,7 +86,8 @@ Future<Result<DateTime>?> showTimePicker24(
             cancelText: pickerLabels.cancel,
             titleText: pickerLabels.title,
             confirmText: pickerLabels.confirm,
-            onRightPressed: () => Navigator.pop(context, selectedTime),
+            onRightPressed: () =>
+                Navigator.pop(context, Result.success(selectedTime)),
           ),
           // 选择器
           TimePickerWidget(
