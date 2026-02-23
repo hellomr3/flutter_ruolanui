@@ -431,18 +431,7 @@ class _DemoPageState extends State<DemoPage> {
           initialText: '''1. 支持自定义主题
 2. 可配置颜色、样式等
 3. 适配不同的设计风格''',
-          theme: MultilineEditorTheme(
-            backgroundColor: const Color(0xFF1E1E1E),
-            appBarBackgroundColor: const Color(0xFF2D2D2D),
-            titleColor: const Color(0xFFFFFFFF),
-            subTitleColor: const Color(0xFFAAAAAA),
-            backIconColor: const Color(0xFFFFFFFF),
-            confirmButtonColor: const Color(0xFF4CAF50),
-            confirmButtonDisabledColor: const Color(0xFF555555),
-            toolbarBackgroundColor: const Color(0xFF2D2D2D),
-            clearButtonColor: const Color(0xFF4CAF50),
-            clearButtonDisabledColor: const Color(0xFF555555),
-          ),
+          theme: MultilineEditorTheme.defaultTheme(),
         ),
       ),
     );
@@ -469,18 +458,7 @@ class _DemoPageState extends State<DemoPage> {
 3. 设计规范
    • 遵循 Material Design
    • 使用品牌色调''',
-          theme: MultilineEditorTheme(
-            backgroundColor: Colors.white,
-            appBarBackgroundColor: const Color(0xFFF5F5F5),
-            titleColor: const Color(0xFF212121),
-            subTitleColor: const Color(0xFF757575),
-            backIconColor: const Color(0xFF212121),
-            confirmButtonColor: const Color(0xFF2196F3),
-            confirmButtonDisabledColor: const Color(0xFFBDBDBD),
-            toolbarBackgroundColor: Colors.white,
-            clearButtonColor: const Color(0xFF2196F3),
-            clearButtonDisabledColor: const Color(0xFFBDBDBD),
-          ),
+          theme: MultilineEditorTheme.defaultTheme(),
         ),
       ),
     );

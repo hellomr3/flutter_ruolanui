@@ -63,9 +63,11 @@ class _CalendarSelectorExampleState extends State<CalendarSelectorExample> {
           context,
           initDate: _selectedDate ?? DateTime.now(),
         );
-        if (result != null) {
-          setState(() => _selectedDate = result);
-        }
+        result?.onSuccess((r) {
+          if (r != null) {
+            setState(() => _selectedDate = r);
+          }
+        });
       },
     );
   }
@@ -80,9 +82,11 @@ class _CalendarSelectorExampleState extends State<CalendarSelectorExample> {
           minDate: DateTime.now().subtract(const Duration(days: 30)),
           maxDate: DateTime.now().add(const Duration(days: 90)),
         );
-        if (result != null) {
-          setState(() => _selectedDate = result);
-        }
+        result?.onSuccess((r) {
+          if (r != null) {
+            setState(() => _selectedDate = r);
+          }
+        });
       },
     );
   }
@@ -102,9 +106,11 @@ class _CalendarSelectorExampleState extends State<CalendarSelectorExample> {
             PeriodOption(label: '+6月', months: 6),
           ],
         );
-        if (result != null) {
-          setState(() => _selectedDate = result);
-        }
+        result?.onSuccess((r) {
+          if (r != null) {
+            setState(() => _selectedDate = r);
+          }
+        });
       },
     );
   }
@@ -118,9 +124,11 @@ class _CalendarSelectorExampleState extends State<CalendarSelectorExample> {
           initDate: _selectedDate ?? DateTime.now(),
           showPeriodButtons: false,
         );
-        if (result != null) {
-          setState(() => _selectedDate = result);
-        }
+        result?.onSuccess((r) {
+          if (r != null) {
+            setState(() => _selectedDate = r);
+          }
+        });
       },
     );
   }

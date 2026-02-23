@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:ruolanui_example/pages/date_page/calendar_selector.dart';
 import 'package:ruolanui_example/pages/date_page/date_page.dart';
-
-import 'demo_page.dart';
 
 void main() {
   runApp(const RuolanUIExampleApp());
@@ -72,7 +69,7 @@ class RuolanUIExampleApp extends StatelessWidget {
           secondaryContainer: const Color(0xFFF2F2F7),
         ),
       ),
-      home: CalendarSelectorExample(),
+      home: DatePage(),
     );
   }
 }
