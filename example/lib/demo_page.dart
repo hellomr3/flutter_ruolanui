@@ -199,6 +199,12 @@ class _DemoPageState extends State<DemoPage> {
           description: '带副标题 + 字数限制 + 自定义主题',
           onPressed: _openFullEditor,
         ),
+        const SizedBox(height: 12),
+        _EditorButton(
+          label: '模板示例',
+          description: '支持选择预设模板填充内容',
+          onPressed: _openEditorWithTemplates,
+        ),
       ],
     );
   }
@@ -464,6 +470,38 @@ class _DemoPageState extends State<DemoPage> {
         ),
       ),
     );
+  }
+
+  /// 带模板的编辑器
+  void _openEditorWithTemplates() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultilineTextEditorPage(
+          title: '工作日报',
+          placeholder: '请输入日报内容，或选择模板快速填写...',
+          maxInputCount: 500,
+          templates: const [
+            EditorTemplate(
+              name: '日报模板',
+              content: '1、今日完成\n\n2、遇到的问题\n\n3、明日计划\n',
+            ),
+            EditorTemplate(
+              name: '周报模板',
+              content: '1、本周工作总结\n\n2、关键成果\n\n3、遇到的问题及解决方案\n\n4、下周计划\n',
+            ),
+            EditorTemplate(
+              name: 'Bug 报告模板',
+              content: '1、问题描述\n\n2、复现步骤\n\n3、期望结果\n\n4、实际结果\n\n5、环境信息\n',
+            ),
+          ],
+        ),
+      ),
+    ).then((result) {
+      if (result != null) {
+        _showSnackbar('已保存内容，共 ${result.length} 字');
+      }
+    });
   }
 }
 

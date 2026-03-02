@@ -5,6 +5,17 @@ import 'widget/list_editor_widget.dart';
 import 'widget/list_toolbar.dart';
 import 'widget/word_count_indicator.dart';
 
+/// 编辑器模板
+class EditorTemplate {
+  /// 模板名称（用于选择列表展示）
+  final String name;
+
+  /// 模板内容
+  final String content;
+
+  const EditorTemplate({required this.name, required this.content});
+}
+
 /// 多行文本编辑器国际化配置
 class MultilineEditorLocale {
   /// 确定按钮文本
@@ -31,6 +42,24 @@ class MultilineEditorLocale {
   /// 挽留弹窗取消按钮（放弃）
   final String retainCancel;
 
+  /// 模板按钮文本
+  final String template;
+
+  /// 模板替换确认弹窗标题
+  final String templateReplaceTitle;
+
+  /// 模板替换确认弹窗内容
+  final String templateReplaceContent;
+
+  /// 模板替换确认按钮
+  final String templateReplaceConfirm;
+
+  /// 模板替换取消按钮
+  final String templateReplaceCancel;
+
+  /// 模板选择取消按钮
+  final String templateSelectCancel;
+
   const MultilineEditorLocale({
     this.confirm = '确定',
     this.clear = '清空',
@@ -40,6 +69,12 @@ class MultilineEditorLocale {
     this.retainContent = '内容已修改，确定要放弃编辑吗？',
     this.retainConfirm = '继续编辑',
     this.retainCancel = '放弃',
+    this.template = '模板',
+    this.templateReplaceTitle = '提示',
+    this.templateReplaceContent = '当前内容将被模板替换，是否继续？',
+    this.templateReplaceConfirm = '替换',
+    this.templateReplaceCancel = '取消',
+    this.templateSelectCancel = '取消',
   });
 
   /// 创建中文配置
@@ -55,6 +90,13 @@ class MultilineEditorLocale {
     retainContent: 'You have unsaved changes. Discard them?',
     retainConfirm: 'Keep Editing',
     retainCancel: 'Discard',
+    template: 'Template',
+    templateReplaceTitle: 'Notice',
+    templateReplaceContent:
+        'Current content will be replaced by the template. Continue?',
+    templateReplaceConfirm: 'Replace',
+    templateReplaceCancel: 'Cancel',
+    templateSelectCancel: 'Cancel',
   );
 }
 
@@ -143,6 +185,9 @@ class MultilineTextEditorPage extends StatefulWidget {
   /// 国际化配置
   final MultilineEditorLocale locale;
 
+  /// 模板列表（为空或 null 时不显示模板按钮）
+  final List<EditorTemplate>? templates;
+
   const MultilineTextEditorPage({
     super.key,
     this.title,
@@ -152,6 +197,7 @@ class MultilineTextEditorPage extends StatefulWidget {
     this.initialText = '',
     this.theme = const MultilineEditorTheme.defaultTheme(),
     this.locale = const MultilineEditorLocale.zh(),
+    this.templates,
   });
 
   @override
@@ -226,6 +272,49 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
     _editorKey.currentState?.clear();
     setState(() {
       _currentText = '';
+    });
+  }
+
+  bool get _hasTemplates =>
+      widget.templates != null && widget.templates!.isNotEmpty;
+
+  void _handleTemplateTap() async {
+    final templates = widget.templates;
+    if (templates == null || templates.isEmpty) return;
+
+    // 先收起键盘，防止弹窗弹出时界面跳动
+    _focusNode.unfocus();
+
+    // 弹出模板选择列表
+    final options = List.generate(
+      templates.length,
+      (i) => OptionItem(id: i, label: templates[i].name),
+    );
+    final result = await showOptionsDialog(
+      context: context,
+      options: options,
+      cancelText: widget.locale.templateSelectCancel,
+    );
+    if (!result.isSuccess || !mounted) return;
+
+    final selected = templates[result.data!];
+
+    // 如果当前有内容，先确认替换
+    if (_currentText.isNotEmpty) {
+      final confirm = await showConfirmDialog(
+        context: context,
+        title: widget.locale.templateReplaceTitle,
+        content: widget.locale.templateReplaceContent,
+        confirmText: widget.locale.templateReplaceConfirm,
+        cancelText: widget.locale.templateReplaceCancel,
+      );
+      if (confirm.data != true || !mounted) return;
+    }
+
+    // 应用模板
+    _editorKey.currentState?.setText(selected.content);
+    setState(() {
+      _currentText = selected.content;
     });
   }
 
@@ -354,14 +443,15 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
                       key: _toolbarKey,
                       showOrdered: true,
                       showUnordered: true,
+                      showTemplate: _hasTemplates,
                       isOrderedActive: _isOrderedActive,
                       isUnorderedActive: _isUnorderedActive,
                       primaryColor: themeConfig.primaryColor,
                       onOrderedListToggle:
                           () => _editorKey.currentState?.toggleOrderedList(),
                       onUnorderedListToggle:
-                          () =>
-                              _editorKey.currentState?.toggleUnorderedList(),
+                          () => _editorKey.currentState?.toggleUnorderedList(),
+                      onTemplateTap: _handleTemplateTap,
                     ),
                   ),
                   // 字数统计
