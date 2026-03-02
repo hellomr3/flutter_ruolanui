@@ -123,7 +123,9 @@ class _DemoPageState extends State<DemoPage> {
           ],
         ),
       ),
-    );
+    ).swipeBackListener(onSwipeBack: () {
+      showConfirmDialog(context: context, content: "返回挽留");
+    });
   }
 
   Widget _buildSectionTitle(String title) {
