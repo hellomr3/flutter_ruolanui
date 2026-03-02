@@ -137,8 +137,9 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
       listController.text = newText;
       final cursorPos = listController.selection.baseOffset;
       if (cursorPos > newText.length) {
-        listController.selection =
-            TextSelection.collapsed(offset: newText.length);
+        listController.selection = TextSelection.collapsed(
+          offset: newText.length,
+        );
       }
     }
 
@@ -203,9 +204,10 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
     }
 
     // 获取选中的文本，判断是否跨行
-    final selectedText = selection.isCollapsed
-        ? ''
-        : currentText.substring(selection.start, selection.end);
+    final selectedText =
+        selection.isCollapsed
+            ? ''
+            : currentText.substring(selection.start, selection.end);
     final isMultiLine = selectedText.contains('\n');
 
     // 判断是单行还是多行操作
@@ -384,8 +386,11 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
 
       // 构建新文本
       final newSelectedText = newLines.join('\n');
-      final newText =
-          text.replaceRange(firstLineStart, lastLineEnd, newSelectedText);
+      final newText = text.replaceRange(
+        firstLineStart,
+        lastLineEnd,
+        newSelectedText,
+      );
 
       // 计算新的选中范围
       final lengthDiff = newSelectedText.length - selectedText.length;
@@ -440,7 +445,10 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
 
     final lineContent = text.substring(lineStart, lineEnd);
     return _ListLineInfo(
-        lineStart: lineStart, lineEnd: lineEnd, lineContent: lineContent);
+      lineStart: lineStart,
+      lineEnd: lineEnd,
+      lineContent: lineContent,
+    );
   }
 
   /// 获取下一个有序序号（基于上一行）
@@ -578,11 +586,15 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
 
       if (prefixLength > 0 && actualLineStart + prefixLength <= text.length) {
         // 删除整个序号
-        final newText =
-            text.replaceRange(actualLineStart, actualLineStart + prefixLength, '');
+        final newText = text.replaceRange(
+          actualLineStart,
+          actualLineStart + prefixLength,
+          '',
+        );
         listController.text = newText;
         listController.selection = TextSelection.collapsed(
-            offset: actualLineStart.clamp(0, newText.length));
+          offset: actualLineStart.clamp(0, newText.length),
+        );
         _listPreviousText = newText;
 
         // 重算有序序号
@@ -653,11 +665,15 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
         final contentAfterPrefix = prevLineContent.substring(orderedMatch.end);
         if (contentAfterPrefix.trim().isEmpty) {
           // 上一行只有序号，移除序号并不延续
-          final updatedText =
-              newText.replaceRange(prevLineStart, prevLineEnd + 1, '');
+          final updatedText = newText.replaceRange(
+            prevLineStart,
+            prevLineEnd + 1,
+            '',
+          );
           listController.text = updatedText;
           listController.selection = TextSelection.collapsed(
-              offset: prevLineStart.clamp(0, updatedText.length));
+            offset: prevLineStart.clamp(0, updatedText.length),
+          );
           _listPreviousText = updatedText;
           return updatedText;
         }
@@ -672,11 +688,15 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
           final contentAfterPrefix = prevLineContent.substring(2);
           if (contentAfterPrefix.trim().isEmpty) {
             // 上一行只有序号，移除序号并不延续
-            final updatedText =
-                newText.replaceRange(prevLineStart, prevLineEnd + 1, '');
+            final updatedText = newText.replaceRange(
+              prevLineStart,
+              prevLineEnd + 1,
+              '',
+            );
             listController.text = updatedText;
             listController.selection = TextSelection.collapsed(
-                offset: prevLineStart.clamp(0, updatedText.length));
+              offset: prevLineStart.clamp(0, updatedText.length),
+            );
             _listPreviousText = updatedText;
             return updatedText;
           }
@@ -686,11 +706,17 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
 
       if (prefixToInsert != null && newLineStart <= newText.length) {
         // 在新行插入序号
-        final updatedText =
-            newText.replaceRange(newLineStart, newLineStart, prefixToInsert);
+        final updatedText = newText.replaceRange(
+          newLineStart,
+          newLineStart,
+          prefixToInsert,
+        );
         listController.text = updatedText;
         listController.selection = TextSelection.collapsed(
-          offset: (newLineStart + prefixToInsert.length).clamp(0, updatedText.length),
+          offset: (newLineStart + prefixToInsert.length).clamp(
+            0,
+            updatedText.length,
+          ),
         );
         _listPreviousText = updatedText;
         return updatedText;
@@ -707,8 +733,16 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
 
   /// 处理删除：重算序号
   String _handleBackspace(String newText) {
+    // 保存当前光标位置，避免 listController.text = newText 将光标重置到末尾
+    final cursorPos = listController.selection.baseOffset.clamp(
+      0,
+      newText.length,
+    );
     _listPreviousText = newText;
     listController.text = newText;
+    listController.selection = TextSelection.collapsed(
+      offset: cursorPos.clamp(0, newText.length),
+    );
     _recalculateOrderedNumbers();
     return listController.text;
   }
@@ -720,8 +754,10 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
       if (text.isEmpty) return;
 
       final lines = text.split('\n');
-      final cursorPos =
-          listController.selection.baseOffset.clamp(0, text.length);
+      final cursorPos = listController.selection.baseOffset.clamp(
+        0,
+        text.length,
+      );
 
       int currentNumber = 0;
       bool inOrderedList = false;
@@ -771,7 +807,9 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
         _listPreviousText = newText;
       }
     } catch (e, stack) {
-      debugPrint('$_kListEditorDebugTag _recalculateOrderedNumbers 异常: $e\n$stack');
+      debugPrint(
+        '$_kListEditorDebugTag _recalculateOrderedNumbers 异常: $e\n$stack',
+      );
     }
   }
 }
