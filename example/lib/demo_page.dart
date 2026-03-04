@@ -148,6 +148,13 @@ class _DemoPageState extends State<DemoPage> {
           icon: Icons.palette,
           onPressed: _showSelectorWithTheme,
         ),
+        const SizedBox(height: 12),
+        _SelectorButton(
+          label: '多选（空选=全部）',
+          description: '确认时未选择表示选择全部',
+          icon: Icons.done_all,
+          onPressed: _showMultiSelectorAllOnEmpty,
+        ),
         if (_selectedItems.isNotEmpty) ...[
           const SizedBox(height: 16),
           Container(
@@ -307,6 +314,53 @@ class _DemoPageState extends State<DemoPage> {
         );
       },
     );
+  }
+
+  /// 多选示例：未选择时确认代表"全部"
+  void _showMultiSelectorAllOnEmpty() {
+    final items = _buildCityData();
+
+    SelectorDialog.showMultiple<CityItem, String>(
+      context: context,
+      title: '选择城市',
+      items: items,
+      maxSelectedCount: 5,
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+        return ListTile(
+          title: Text(item.name),
+          selected: isSelected,
+        );
+      },
+      childItemBuilder: (context, item, isSelected) {
+        return CheckboxListTile(
+          value: isSelected,
+          title: Text(item.name),
+          onChanged: (_) {},
+        );
+      },
+      // 不显示二级"全部"
+      childAllItemBuilder: (String? pid) => null,
+      onMaxLimitReached: () => _showSnackbar('已达到选择上限'),
+    ).then((result) {
+      result.onSuccess((selected) {
+        final safeSelected = selected ?? <CityItem>[];
+        setState(() {
+          _selectedItems.clear();
+          if (safeSelected.isEmpty) {
+            _selectedItems.add('全部');
+          } else {
+            _selectedItems.addAll(safeSelected.map((item) => item.name));
+          }
+        });
+        if (safeSelected.isEmpty) {
+          _showSnackbar('未选择任何项，已按"全部"处理');
+        } else {
+          _showSnackbar(
+            '已选择: ${safeSelected.map((e) => e.name).join(", ")}',
+          );
+        }
+      });
+    });
   }
 
   /// 构建分类数据
