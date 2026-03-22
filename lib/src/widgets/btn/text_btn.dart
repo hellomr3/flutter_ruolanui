@@ -7,11 +7,14 @@ class TextBtn extends StatelessWidget {
 
   final VoidCallback? onPressed;
 
+  final Color? textColor;
+
   const TextBtn({
     super.key,
     required this.label,
     this.height = 44,
     this.onPressed,
+    this.textColor,
   });
 
   @override
@@ -25,7 +28,12 @@ class TextBtn extends StatelessWidget {
         onPressed: () {
           onPressed?.call();
         },
-        child: Text(label, style: textTheme.bodyMedium),
+        child: Text(
+          label,
+          style: textTheme.bodyMedium?.copyWith(
+            color: textColor,
+          ),
+        ),
       ),
     );
   }
