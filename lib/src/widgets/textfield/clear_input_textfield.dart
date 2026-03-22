@@ -7,7 +7,7 @@ class ClearInputTextField extends StatefulWidget {
   final IconData? icon;
   final Widget? tailIcon;
   final String? value;
-  final ValueChanged<String> onChange;
+  final ValueChanged<String>? onChange;
   final bool obscureText;
   final RegExp? filterPattern;
   final TextEditingController? controller;
@@ -102,7 +102,7 @@ class _ClearInputTextFieldState extends State<ClearInputTextField> {
         child: IconButton(
           onPressed: () {
             _controller.clear();
-            widget.onChange("");
+            widget.onChange?.call("");
           },
           icon: const Icon(Icons.clear),
         ),
@@ -111,7 +111,9 @@ class _ClearInputTextFieldState extends State<ClearInputTextField> {
         borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)),
         borderSide: BorderSide.none,
       ),
-      onChange: widget.onChange,
+      onChange: (v) {
+        widget.onChange?.call(v);
+      },
       focusNode: _focusNode,
       controller: _controller,
       obscureText: widget.obscureText,
