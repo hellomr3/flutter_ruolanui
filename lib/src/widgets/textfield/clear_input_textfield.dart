@@ -26,7 +26,7 @@ class ClearInputTextField extends StatefulWidget {
       this.icon,
       this.controller,
       this.value,
-      required this.onChange,
+      this.onChange,
       this.filterPattern,
       this.textInputAction,
       this.focusNode,
