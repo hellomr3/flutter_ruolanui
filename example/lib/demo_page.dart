@@ -123,7 +123,9 @@ class _DemoPageState extends State<DemoPage> {
           ],
         ),
       ),
-    );
+    ).swipeBackListener(onSwipeBack: () {
+      showConfirmDialog(context: context, content: "返回挽留");
+    });
   }
 
   Widget _buildSectionTitle(String title) {
@@ -145,6 +147,13 @@ class _DemoPageState extends State<DemoPage> {
           description: '自定义选择器样式',
           icon: Icons.palette,
           onPressed: _showSelectorWithTheme,
+        ),
+        const SizedBox(height: 12),
+        _SelectorButton(
+          label: '多选（空选=全部）',
+          description: '确认时未选择表示选择全部',
+          icon: Icons.done_all,
+          onPressed: _showMultiSelectorAllOnEmpty,
         ),
         if (_selectedItems.isNotEmpty) ...[
           const SizedBox(height: 16),
@@ -196,6 +205,12 @@ class _DemoPageState extends State<DemoPage> {
           label: '完整示例',
           description: '带副标题 + 字数限制 + 自定义主题',
           onPressed: _openFullEditor,
+        ),
+        const SizedBox(height: 12),
+        _EditorButton(
+          label: '模板示例',
+          description: '支持选择预设模板填充内容',
+          onPressed: _openEditorWithTemplates,
         ),
       ],
     );
@@ -299,6 +314,53 @@ class _DemoPageState extends State<DemoPage> {
         );
       },
     );
+  }
+
+  /// 多选示例：未选择时确认代表"全部"
+  void _showMultiSelectorAllOnEmpty() {
+    final items = _buildCityData();
+
+    SelectorDialog.showMultiple<CityItem, String>(
+      context: context,
+      title: '选择城市',
+      items: items,
+      maxSelectedCount: 5,
+      parentItemBuilder: (context, item, isSelected, hasSelectedItems) {
+        return ListTile(
+          title: Text(item.name),
+          selected: isSelected,
+        );
+      },
+      childItemBuilder: (context, item, isSelected) {
+        return CheckboxListTile(
+          value: isSelected,
+          title: Text(item.name),
+          onChanged: (_) {},
+        );
+      },
+      // 不显示二级"全部"
+      childAllItemBuilder: (String? pid) => null,
+      onMaxLimitReached: () => _showSnackbar('已达到选择上限'),
+    ).then((result) {
+      result.onSuccess((selected) {
+        final safeSelected = selected ?? <CityItem>[];
+        setState(() {
+          _selectedItems.clear();
+          if (safeSelected.isEmpty) {
+            _selectedItems.add('全部');
+          } else {
+            _selectedItems.addAll(safeSelected.map((item) => item.name));
+          }
+        });
+        if (safeSelected.isEmpty) {
+          _showSnackbar('未选择任何项，已按"全部"处理');
+        } else {
+          _showSnackbar(
+            '已选择: ${safeSelected.map((e) => e.name).join(", ")}',
+          );
+        }
+      });
+    });
   }
 
   /// 构建分类数据
@@ -462,6 +524,38 @@ class _DemoPageState extends State<DemoPage> {
         ),
       ),
     );
+  }
+
+  /// 带模板的编辑器
+  void _openEditorWithTemplates() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MultilineTextEditorPage(
+          title: '工作日报',
+          placeholder: '请输入日报内容，或选择模板快速填写...',
+          maxInputCount: 500,
+          templates: const [
+            EditorTemplate(
+              name: '日报模板',
+              content: '1、今日完成\n\n2、遇到的问题\n\n3、明日计划\n',
+            ),
+            EditorTemplate(
+              name: '周报模板',
+              content: '1、本周工作总结\n\n2、关键成果\n\n3、遇到的问题及解决方案\n\n4、下周计划\n',
+            ),
+            EditorTemplate(
+              name: 'Bug 报告模板',
+              content: '1、问题描述\n\n2、复现步骤\n\n3、期望结果\n\n4、实际结果\n\n5、环境信息\n',
+            ),
+          ],
+        ),
+      ),
+    ).then((result) {
+      if (result != null) {
+        _showSnackbar('已保存内容，共 ${result.length} 字');
+      }
+    });
   }
 }
 

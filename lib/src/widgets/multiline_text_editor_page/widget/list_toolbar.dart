@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 
 /// 列表编辑器工具栏
 ///
-/// 支持有序列表和无序列表按钮切换
+/// 支持有序列表、无序列表和模板按钮
 class ListToolbar extends StatefulWidget {
   /// 是否显示有序列表按钮
   final bool showOrdered;
 
   /// 是否显示无序列表按钮
   final bool showUnordered;
+
+  /// 是否显示模板按钮
+  final bool showTemplate;
 
   /// 有序列表是否激活
   final bool isOrderedActive;
@@ -22,6 +25,9 @@ class ListToolbar extends StatefulWidget {
   /// 无序列表切换回调
   final VoidCallback? onUnorderedListToggle;
 
+  /// 模板按钮点击回调
+  final VoidCallback? onTemplateTap;
+
   /// 工具栏高度
   final double? height;
 
@@ -32,10 +38,12 @@ class ListToolbar extends StatefulWidget {
     super.key,
     this.showOrdered = true,
     this.showUnordered = true,
+    this.showTemplate = false,
     this.isOrderedActive = false,
     this.isUnorderedActive = false,
     this.onOrderedListToggle,
     this.onUnorderedListToggle,
+    this.onTemplateTap,
     this.height,
     this.primaryColor = const Color(0xFF0052D9),
   });
@@ -48,10 +56,14 @@ class ListToolbarState extends State<ListToolbar> {
   // 按钮的 GlobalKey，用于判断点击区域
   final GlobalKey _orderedButtonKey = GlobalKey();
   final GlobalKey _unorderedButtonKey = GlobalKey();
+  final GlobalKey _templateButtonKey = GlobalKey();
 
   /// 获取序列按钮的 GlobalKey 列表，用于判断点击区域
-  List<GlobalKey> get listButtonKeys =>
-      [_orderedButtonKey, _unorderedButtonKey];
+  List<GlobalKey> get listButtonKeys => [
+    _orderedButtonKey,
+    _unorderedButtonKey,
+    _templateButtonKey,
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +89,16 @@ class ListToolbarState extends State<ListToolbar> {
               primaryColor: widget.primaryColor,
               onTap: widget.onUnorderedListToggle ?? () {},
             ),
+          if (widget.showTemplate) ...[
+            const SizedBox(width: 8),
+            _ToolbarButton(
+              key: _templateButtonKey,
+              icon: Icons.description_outlined,
+              isActive: false,
+              primaryColor: widget.primaryColor,
+              onTap: widget.onTemplateTap ?? () {},
+            ),
+          ],
           const Spacer(),
         ],
       ),
@@ -114,12 +136,10 @@ class _ToolbarButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isActive ? primaryColor.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(borderRadius),
-          border: isActive
-              ? Border.all(
-                  color: primaryColor.withOpacity(0.3),
-                  width: 1,
-                )
-              : null,
+          border:
+              isActive
+                  ? Border.all(color: primaryColor.withOpacity(0.3), width: 1)
+                  : null,
         ),
         child: Icon(
           icon,

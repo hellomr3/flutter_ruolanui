@@ -30,4 +30,5 @@ export 'src/widgets/container/keyboard/keyboard_dismiss.dart';
 export 'src/widgets/multiline_text_editor_page/multiline_text_editor_page.dart';
 // widgets
 export 'src/widgets/textfield/app_textfield.dart';
+export 'src/widgets/swipe_back_listener.dart';
 export 'src/widgets/textfield/observable_text_controller.dart';

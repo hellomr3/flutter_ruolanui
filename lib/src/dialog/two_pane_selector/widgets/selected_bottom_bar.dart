@@ -16,7 +16,7 @@ class SelectedBottomBar<T extends SelectorItem<ID>, ID>
 
   /// 已选择的项目构建器（可选，未提供时使用默认样式）
   final Widget Function(BuildContext context, T item, VoidCallback onRemove)?
-      selectedItemBuilder;
+  selectedItemBuilder;
 
   /// 已选择的项目列表
   final List<T> selectedItems;
@@ -66,19 +66,26 @@ class SelectedBottomBar<T extends SelectorItem<ID>, ID>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 顶部栏：左上"已选择"，右上"已选 x/y"
+          // "已选 x/y"
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  '已选择',
-                  style: textTheme.titleLarge,
-                ),
-                Text(
-                  '已选 $selectedCount/$maxSelectedCount',
-                  style: textTheme.bodySmall,
+                Text("请选择", style: textTheme.titleMedium),
+                Spacer(),
+                Row(
+                  children: [
+                    Text(
+                      '$selectedCount',
+                      style: (textTheme.bodyMedium ?? const TextStyle())
+                          .copyWith(color: colorScheme.primary),
+                    ),
+                    Text(
+                      '/$maxSelectedCount',
+                      style: (textTheme.bodyMedium ?? const TextStyle()),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -86,23 +93,25 @@ class SelectedBottomBar<T extends SelectorItem<ID>, ID>
           // 中间：已选择的 Item 列表
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: selectedItems.map((item) {
-                  final builder = selectedItemBuilder ??
-                      (context, item, onRemove) => DefaultSelectedItem<T, ID>(
-                            item: item,
-                            onRemove: onRemove,
-                          );
-                  return builder(
-                    context,
-                    item,
-                    () => onRemove(item.id),
-                  );
-                }).toList(),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 32),
+              child: SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children:
+                      selectedItems.map((item) {
+                        final builder =
+                            selectedItemBuilder ??
+                            (context, item, onRemove) =>
+                                DefaultSelectedItem<T, ID>(
+                                  item: item,
+                                  onRemove: onRemove,
+                                );
+                        return builder(context, item, () => onRemove(item.id));
+                      }).toList(),
+                ),
               ),
             ),
           ),

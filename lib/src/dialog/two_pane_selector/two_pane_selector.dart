@@ -336,9 +336,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        return controller.selectedIds.isNotEmpty
-            ? _buildSelectedBottomBar()
-            : const SizedBox.shrink();
+        return _buildSelectedBottomBar();
       },
     );
   }
@@ -346,6 +344,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
   Widget _buildSelectedBottomBar() {
     final selectedItems = controller.selectedItems;
     final selectedCount = selectedItems.length;
+    final confirmItems = _resolveConfirmItems(selectedItems);
 
     return SelectedBottomBar<T, ID>(
       selectedCount: selectedCount,
@@ -354,10 +353,21 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
       selectedItems: selectedItems,
       onRemove: (itemId) => controller.toggleSelection(itemId),
       onClear: () => controller.clearSelection(),
-      onConfirm: () => widget.onConfirm?.call(selectedItems),
+      onConfirm: () => widget.onConfirm?.call(confirmItems),
       bottomPadding: MediaQuery.paddingOf(context).bottom,
       topPadding: theme.bottomBarTopPadding,
     );
+  }
+
+  List<T> _resolveConfirmItems(List<T> selectedItems) {
+    if (widget.mode == SelectorMode.multiple && selectedItems.isEmpty) {
+      final allItem = widget.parentAllItem;
+      if (allItem != null && allItem.id == itemAll) {
+        return [allItem];
+      }
+      return <T>[];
+    }
+    return selectedItems;
   }
 
   /// 获取选中的项目列表

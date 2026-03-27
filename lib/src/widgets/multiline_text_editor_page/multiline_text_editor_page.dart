@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:ruolanui/ruolanui.dart';
 
 import 'widget/list_editor_widget.dart';
 import 'widget/list_toolbar.dart';
 import 'widget/word_count_indicator.dart';
+
+/// 编辑器模板
+class EditorTemplate {
+  /// 模板名称（用于选择列表展示）
+  final String name;
+
+  /// 模板内容
+  final String content;
+
+  const EditorTemplate({required this.name, required this.content});
+}
 
 /// 多行文本编辑器国际化配置
 class MultilineEditorLocale {
@@ -18,11 +30,51 @@ class MultilineEditorLocale {
   /// 默认占位符
   final String defaultPlaceholder;
 
+  /// 挽留弹窗标题
+  final String retainTitle;
+
+  /// 挽留弹窗内容
+  final String retainContent;
+
+  /// 挽留弹窗确认按钮（继续编辑，强化）
+  final String retainConfirm;
+
+  /// 挽留弹窗取消按钮（放弃）
+  final String retainCancel;
+
+  /// 模板按钮文本
+  final String template;
+
+  /// 模板替换确认弹窗标题
+  final String templateReplaceTitle;
+
+  /// 模板替换确认弹窗内容
+  final String templateReplaceContent;
+
+  /// 模板替换确认按钮
+  final String templateReplaceConfirm;
+
+  /// 模板替换取消按钮
+  final String templateReplaceCancel;
+
+  /// 模板选择取消按钮
+  final String templateSelectCancel;
+
   const MultilineEditorLocale({
     this.confirm = '确定',
     this.clear = '清空',
     this.defaultTitle = '编辑内容',
     this.defaultPlaceholder = '请输入内容...',
+    this.retainTitle = '提示',
+    this.retainContent = '内容已修改，确定要放弃编辑吗？',
+    this.retainConfirm = '继续编辑',
+    this.retainCancel = '放弃',
+    this.template = '模板',
+    this.templateReplaceTitle = '提示',
+    this.templateReplaceContent = '当前内容将被模板替换，是否继续？',
+    this.templateReplaceConfirm = '替换',
+    this.templateReplaceCancel = '取消',
+    this.templateSelectCancel = '取消',
   });
 
   /// 创建中文配置
@@ -34,6 +86,17 @@ class MultilineEditorLocale {
     clear: 'Clear',
     defaultTitle: 'Edit Content',
     defaultPlaceholder: 'Please enter content...',
+    retainTitle: 'Unsaved Changes',
+    retainContent: 'You have unsaved changes. Discard them?',
+    retainConfirm: 'Keep Editing',
+    retainCancel: 'Discard',
+    template: 'Template',
+    templateReplaceTitle: 'Notice',
+    templateReplaceContent:
+        'Current content will be replaced by the template. Continue?',
+    templateReplaceConfirm: 'Replace',
+    templateReplaceCancel: 'Cancel',
+    templateSelectCancel: 'Cancel',
   );
 }
 
@@ -122,6 +185,9 @@ class MultilineTextEditorPage extends StatefulWidget {
   /// 国际化配置
   final MultilineEditorLocale locale;
 
+  /// 模板列表（为空或 null 时不显示模板按钮）
+  final List<EditorTemplate>? templates;
+
   const MultilineTextEditorPage({
     super.key,
     this.title,
@@ -131,6 +197,7 @@ class MultilineTextEditorPage extends StatefulWidget {
     this.initialText = '',
     this.theme = const MultilineEditorTheme.defaultTheme(),
     this.locale = const MultilineEditorLocale.zh(),
+    this.templates,
   });
 
   @override
@@ -167,11 +234,30 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
     super.dispose();
   }
 
-  void _handleBackTap() {
+  /// 内容是否有变化
+  bool get _hasChanges => _currentText != widget.initialText;
+
+  void _handleBackTap() async {
+    if (_hasChanges) {
+      final result = await _showRetainDialog();
+      // confirm（继续编辑）返回 true → 留下；cancel（放弃）返回 false → 离开
+      if (result.data != false) return;
+    }
     _focusNode.unfocus();
     Future.delayed(const Duration(milliseconds: 100), () {
-      Navigator.of(context).pop(_currentText);
+      if (mounted) Navigator.of(context).pop(null);
     });
+  }
+
+  Future<Result<bool>> _showRetainDialog() {
+    final locale = widget.locale;
+    return showConfirmDialog(
+      context: context,
+      title: locale.retainTitle,
+      content: locale.retainContent,
+      confirmText: locale.retainConfirm,
+      cancelText: locale.retainCancel,
+    );
   }
 
   void _handleConfirmTap() {
@@ -186,6 +272,49 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
     _editorKey.currentState?.clear();
     setState(() {
       _currentText = '';
+    });
+  }
+
+  bool get _hasTemplates =>
+      widget.templates != null && widget.templates!.isNotEmpty;
+
+  void _handleTemplateTap() async {
+    final templates = widget.templates;
+    if (templates == null || templates.isEmpty) return;
+
+    // 先收起键盘，防止弹窗弹出时界面跳动
+    _focusNode.unfocus();
+
+    // 弹出模板选择列表
+    final options = List.generate(
+      templates.length,
+      (i) => OptionItem(id: i, label: templates[i].name),
+    );
+    final result = await showOptionsDialog(
+      context: context,
+      options: options,
+      cancelText: widget.locale.templateSelectCancel,
+    );
+    if (!result.isSuccess || !mounted) return;
+
+    final selected = templates[result.data!];
+
+    // 如果当前有内容，先确认替换
+    if (_currentText.isNotEmpty) {
+      final confirm = await showConfirmDialog(
+        context: context,
+        title: widget.locale.templateReplaceTitle,
+        content: widget.locale.templateReplaceContent,
+        confirmText: widget.locale.templateReplaceConfirm,
+        cancelText: widget.locale.templateReplaceCancel,
+      );
+      if (confirm.data != true || !mounted) return;
+    }
+
+    // 应用模板
+    _editorKey.currentState?.setText(selected.content);
+    setState(() {
+      _currentText = selected.content;
     });
   }
 
@@ -269,9 +398,10 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
               widget.locale.confirm,
               style: TextStyle(
                 fontSize: 15,
-                color: _currentText.isNotEmpty
-                    ? themeConfig.primaryColor
-                    : themeConfig.disabledColor,
+                color:
+                    _currentText.isNotEmpty
+                        ? themeConfig.primaryColor
+                        : themeConfig.disabledColor,
               ),
             ),
           ),
@@ -287,7 +417,8 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
                 child: ListEditorWidget(
                   key: _editorKey,
                   text: widget.initialText,
-                  placeholder: widget.placeholder ?? widget.locale.defaultPlaceholder,
+                  placeholder:
+                      widget.placeholder ?? widget.locale.defaultPlaceholder,
                   focusNode: _focusNode,
                   maxInputCount: widget.maxInputCount,
                   enableList: true,
@@ -312,13 +443,15 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
                       key: _toolbarKey,
                       showOrdered: true,
                       showUnordered: true,
+                      showTemplate: _hasTemplates,
                       isOrderedActive: _isOrderedActive,
                       isUnorderedActive: _isUnorderedActive,
                       primaryColor: themeConfig.primaryColor,
-                      onOrderedListToggle: () =>
-                          _editorKey.currentState?.toggleOrderedList(),
-                      onUnorderedListToggle: () =>
-                          _editorKey.currentState?.toggleUnorderedList(),
+                      onOrderedListToggle:
+                          () => _editorKey.currentState?.toggleOrderedList(),
+                      onUnorderedListToggle:
+                          () => _editorKey.currentState?.toggleUnorderedList(),
+                      onTemplateTap: _handleTemplateTap,
                     ),
                   ),
                   // 字数统计
@@ -340,9 +473,10 @@ class _MultilineTextEditorPageState extends State<MultilineTextEditorPage> {
                         widget.locale.clear,
                         style: TextStyle(
                           fontSize: 14,
-                          color: _currentText.isNotEmpty
-                              ? themeConfig.primaryColor
-                              : themeConfig.disabledColor,
+                          color:
+                              _currentText.isNotEmpty
+                                  ? themeConfig.primaryColor
+                                  : themeConfig.disabledColor,
                         ),
                       ),
                     ),
