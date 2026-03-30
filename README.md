@@ -79,18 +79,39 @@ TwoPaneSelector<MyEntity, String>(
 - [双栏选择器使用文档](lib/src/dialog/two_pane_selector/README.md)
 - [多行文本编辑器使用文档](lib/src/widgets/multiline_text_editor_page/README.md)
 
-## 开发
+## Claude Code Skills
 
-```bash
-# 运行示例
-flutter run
+本项目内置了 Claude Code Skills，帮助依赖方在使用 AI 辅助编码时正确使用 ruolanui 组件。
 
-# 运行测试
-flutter test
+### 包含的 Skills（3 个）
 
-# 代码生成
-flutter pub run build_runner build
+| Skill | 说明 |
+|-------|------|
+| `ruolanui-components` | 按钮、输入框、导航栏、工具组件的使用方式和参数 |
+| `ruolanui-dialogs` | 对话框、选择器、日期/时间/日历选择器、多行编辑器 |
+| `ruolanui-patterns` | 事件驱动模式（EventStateMixin + EventHandlerMixin）、Result 类型、AutoDisposeMixin、页面模板 |
+
+### 如何使用
+
+在你的项目 `CLAUDE.md` 中添加以下 import：
+
+**Path 依赖方式：**
+
+```markdown
+@../ruolanui/.claude/skills/ruolanui-components/SKILL.md
+@../ruolanui/.claude/skills/ruolanui-dialogs/SKILL.md
+@../ruolanui/.claude/skills/ruolanui-patterns/SKILL.md
 ```
+
+**Git 依赖方式：**
+
+```markdown
+@~/.pub-cache/git/ruolanui*/.claude/skills/ruolanui-components/SKILL.md
+@~/.pub-cache/git/ruolanui*/.claude/skills/ruolanui-dialogs/SKILL.md
+@~/.pub-cache/git/ruolanui*/.claude/skills/ruolanui-patterns/SKILL.md
+```
+
+> 也可只 import 需要的 skill，不必全部引入。
 
 ## 许可证
 
