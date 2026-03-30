@@ -61,14 +61,6 @@ class _ClearInputTextFieldState extends State<ClearInputTextField> {
   }
 
   @override
-  void didUpdateWidget(covariant ClearInputTextField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value != _controller.text) {
-      _controller.text = widget.value ?? "";
-    }
-  }
-
-  @override
   void dispose() {
     _controller.removeListener(_onTextChanged);
     _controller.dispose();
