@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ruolanui/ruolanui.dart';
+
+import 'app_textfield.dart';
 
 class ClearInputTextField extends StatefulWidget {
   final bool enable;
@@ -19,25 +20,25 @@ class ClearInputTextField extends StatefulWidget {
   final bool autoFocus;
   final ValueChanged<String>? onSubmitted;
 
-  const ClearInputTextField(
-      {super.key,
-      this.enable = true,
-      required this.hintText,
-      this.icon,
-      this.controller,
-      this.value,
-      this.onChange,
-      this.filterPattern,
-      this.textInputAction,
-      this.focusNode,
-      this.tailIcon,
-      this.fillColor,
-      this.onSubmitted,
-      bool? autoFocus,
-      bool? obscureText,
-      this.borderRadius = 12,
-      TextInputType? keyboardType})
-      : obscureText = obscureText ?? false,
+  const ClearInputTextField({
+    super.key,
+    this.enable = true,
+    required this.hintText,
+    this.icon,
+    this.controller,
+    this.value,
+    this.onChange,
+    this.filterPattern,
+    this.textInputAction,
+    this.focusNode,
+    this.tailIcon,
+    this.fillColor,
+    this.onSubmitted,
+    bool? autoFocus,
+    bool? obscureText,
+    this.borderRadius = 12,
+    TextInputType? keyboardType,
+  })  : obscureText = obscureText ?? false,
         keyboardType = keyboardType ?? TextInputType.text,
         autoFocus = autoFocus ?? false;
 
@@ -48,24 +49,39 @@ class ClearInputTextField extends StatefulWidget {
 class _ClearInputTextFieldState extends State<ClearInputTextField> {
   late TextEditingController _controller;
 
-  final FocusNode _focusNode = FocusNode();
+  late FocusNode _focusNode;
   bool _showClearButton = false;
 
   @override
   void initState() {
     super.initState();
     _controller = widget.controller ?? TextEditingController();
+    _focusNode = widget.focusNode ?? FocusNode();
     _controller.addListener(_onTextChanged);
     _focusNode.addListener(_onFocusChanged);
-    _controller.text = widget.value ?? "";
+    if (widget.controller == null) {
+      _controller.text = widget.value ?? "";
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant ClearInputTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller == null && widget.value != _controller.text) {
+      _controller.text = widget.value ?? "";
+    }
   }
 
   @override
   void dispose() {
     _controller.removeListener(_onTextChanged);
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     _focusNode.removeListener(_onFocusChanged);
-    _focusNode.dispose();
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
     super.dispose();
   }
 
