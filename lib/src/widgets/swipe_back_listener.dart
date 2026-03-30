@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 /// 自定义侧滑拦截监听器
@@ -91,7 +92,7 @@ class _SwipeBackListenerState extends State<SwipeBackListener> {
         // 我们只在屏幕左侧边缘放置一个透明的"感应区"，减少对页面中间滚动组件的干扰
         Positioned(
           left: 0,
-          top: 0,
+          top: MediaQuery.of(context).padding.top + kToolbarHeight,
           bottom: 0,
           width: _leftEdgeThreshold,
           child: GestureDetector(
