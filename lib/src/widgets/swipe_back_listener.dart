@@ -9,13 +9,11 @@ import 'package:flutter/material.dart';
 class SwipeBackListener extends StatefulWidget {
   final Widget child;
   final VoidCallback onSwipeBack;
-  final bool isEnable; // 是否开启拦截逻辑
 
   const SwipeBackListener({
     super.key,
     required this.child,
     required this.onSwipeBack,
-    this.isEnable = true,
   });
 
   @override
@@ -72,8 +70,6 @@ class _SwipeBackListenerState extends State<SwipeBackListener> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.isEnable) return widget.child;
-
     final bool isIOS = Platform.isIOS;
 
     // PopScope 用于拦截 Android 返回键和 iOS 的原生手势
@@ -81,10 +77,7 @@ class _SwipeBackListenerState extends State<SwipeBackListener> {
       canPop: false, // 核心：设为 false 禁用 iOS 原生侧滑和 Android 默认返回
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        // 只有非 iOS 平台（如 Android）才在此处处理系统返回键逻辑
-        if (!isIOS) {
-          widget.onSwipeBack();
-        }
+        widget.onSwipeBack();
       },
       child: isIOS ? _buildIOSGestureDetector() : widget.child,
     );
@@ -95,7 +88,7 @@ class _SwipeBackListenerState extends State<SwipeBackListener> {
     return Stack(
       children: [
         widget.child,
-        // 我们只在屏幕左侧边缘放置一个透明的“感应区”，减少对页面中间滚动组件的干扰
+        // 我们只在屏幕左侧边缘放置一个透明的"感应区"，减少对页面中间滚动组件的干扰
         Positioned(
           left: 0,
           top: 0,
@@ -118,11 +111,9 @@ class _SwipeBackListenerState extends State<SwipeBackListener> {
 extension SwipeBackListenerExtension on Widget {
   Widget swipeBackListener({
     required VoidCallback onSwipeBack,
-    bool isEnable = true,
   }) {
     return SwipeBackListener(
       onSwipeBack: onSwipeBack,
-      isEnable: isEnable,
       child: this,
     );
   }
