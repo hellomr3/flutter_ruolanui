@@ -198,7 +198,8 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
                     theme.leftPanelWidthFactor,
                 color: theme.leftPanelColor ?? colorScheme.surface,
                 child: ListView(
-                  padding: EdgeInsets.zero,
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).padding.bottom),
                   children: [
                     // 左侧顶部"全部"选项（如果配置了）
                     if (widget.parentAllItem != null) _buildParentAllItem(),
@@ -228,7 +229,8 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
                   child: selectedParentId == null
                       ? widget.emptyState ?? _defaultEmptyState()
                       : ListView(
-                          padding: EdgeInsets.zero,
+                          padding: EdgeInsets.only(
+                              bottom: MediaQuery.of(context).padding.bottom),
                           children: [
                             // 右侧顶部"全部"选项（如果配置了）
                             _buildChildAllItem(selectedParentId),
