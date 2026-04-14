@@ -42,52 +42,56 @@ class BlockBtn extends StatelessWidget {
     final bgColor = backgroundColor ?? colorScheme.surfaceContainer;
 
     final border = showDivider
-        ? Border(
-            bottom: BorderSide(
-              width: 0.5,
-              color: colorScheme.surfaceContainer,
-            ),
+        ? Divider(
+            indent: 16,
+            endIndent: 16,
+            thickness: 0.8,
+            height: 0.8,
           )
         : null;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _isTappable ? onTap : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: borderRadius,
-          border: border,
-        ),
-        padding: padding,
-        child: Row(
-          children: [
-            if (leading != null) ...[
-              Icon(leading, size: 24, color: colorScheme.onSurface),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (hasTitle) Text(title, style: textTheme.bodyMedium),
-                  if (hasTitle && hasHint) const SizedBox(height: 2),
-                  if (hasHint) Text(hint!, style: textTheme.labelMedium),
-                ],
-              ),
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: borderRadius,
             ),
-            if (trailing != null || _isTappable) ...[
-              const SizedBox(width: 8),
-              if (trailing != null) trailing!,
-              if (_isTappable && arrow) ...[
-                if (trailing != null) const SizedBox(width: 4),
-                Icon(Icons.chevron_right,
-                    size: 20, color: colorScheme.onSurfaceVariant),
+            padding: padding,
+            child: Row(
+              children: [
+                if (leading != null) ...[
+                  Icon(leading, size: 24, color: colorScheme.onSurface),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasTitle) Text(title, style: textTheme.bodyMedium),
+                      if (hasTitle && hasHint) const SizedBox(height: 2),
+                      if (hasHint) Text(hint!, style: textTheme.labelMedium),
+                    ],
+                  ),
+                ),
+                if (trailing != null || _isTappable) ...[
+                  const SizedBox(width: 8),
+                  if (trailing != null) trailing!,
+                  if (_isTappable && arrow) ...[
+                    if (trailing != null) const SizedBox(width: 4),
+                    Icon(Icons.chevron_right,
+                        size: 20, color: colorScheme.onSurfaceVariant),
+                  ],
+                ],
               ],
-            ],
-          ],
-        ),
+            ),
+          ),
+          if (border != null) border
+        ],
       ),
     );
   }
