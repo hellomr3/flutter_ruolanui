@@ -49,13 +49,35 @@ ErrorBtn(
 )
 ```
 
-### BlockBtn — 列表项按钮（带图标和箭头）
+### BlockBtn — 列表项按钮（带图标、描述和箭头）
 
 ```dart
+// 基础用法
 BlockBtn(
-  icon: Icons.settings,
-  text: '设置',
+  leading: Icons.settings,
+  title: '设置',
   onTap: () {},
+)
+
+// 带描述文字
+BlockBtn(
+  leading: Icons.person,
+  title: '用户名',
+  hint: '请输入用户名',
+  onTap: () {},
+)
+
+// 无箭头 + 自定义尾部
+BlockBtn(
+  title: '版本',
+  trailing: Text('v1.0.0'),
+  arrow: false,
+)
+
+// 禁用状态
+BlockBtn(
+  title: '功能未开放',
+  disabled: true,
 )
 ```
 
