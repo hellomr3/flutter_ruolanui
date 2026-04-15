@@ -5,6 +5,7 @@ class BlockBtn extends StatelessWidget {
   final String? hint;
   final VoidCallback? onTap;
   final IconData? leading;
+  final Widget? leadingWidget;
   final Widget? trailing;
   final bool showDivider;
   final BorderRadius? borderRadius;
@@ -19,13 +20,14 @@ class BlockBtn extends StatelessWidget {
     this.hint,
     this.onTap,
     this.leading,
+    this.leadingWidget,
     this.trailing,
     this.borderRadius,
     this.showDivider = true,
     this.arrow = true,
     this.disabled = false,
     this.backgroundColor,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
   });
 
   bool get _isTappable => onTap != null && !disabled;
@@ -51,7 +53,7 @@ class BlockBtn extends StatelessWidget {
         : null;
 
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       onTap: _isTappable ? onTap : null,
       child: Column(
         children: [
@@ -63,8 +65,9 @@ class BlockBtn extends StatelessWidget {
             padding: padding,
             child: Row(
               children: [
-                if (leading != null) ...[
-                  Icon(leading, size: 24, color: colorScheme.onSurface),
+                if (leading != null || leadingWidget != null) ...[
+                  leadingWidget ??
+                      Icon(leading, size: 24, color: colorScheme.onSurface),
                   const SizedBox(width: 12),
                 ],
                 Expanded(
