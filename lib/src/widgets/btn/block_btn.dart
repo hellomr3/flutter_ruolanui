@@ -77,7 +77,7 @@ class BlockBtn extends StatelessWidget {
                     children: [
                       if (hasTitle) Text(title, style: textTheme.bodyMedium),
                       if (hasTitle && hasHint) const SizedBox(height: 2),
-                      if (hasHint) Text(hint!, style: textTheme.labelMedium),
+                      if (hasHint) Text(hint!, style: textTheme.labelSmall),
                     ],
                   ),
                 ),
