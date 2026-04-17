@@ -5,87 +5,97 @@ class BlockBtn extends StatelessWidget {
   final String? hint;
   final VoidCallback? onTap;
   final IconData? leading;
+  final Widget? leadingWidget;
   final Widget? trailing;
   final bool showDivider;
   final BorderRadius? borderRadius;
+  final bool arrow;
+  final bool disabled;
+  final Color? backgroundColor;
+  final EdgeInsets padding;
 
-  const BlockBtn(
-      {super.key,
-      required this.title,
-      this.hint,
-      this.onTap,
-      this.leading,
-      this.trailing,
-      this.borderRadius,
-      this.showDivider = true});
+  const BlockBtn({
+    super.key,
+    required this.title,
+    this.hint,
+    this.onTap,
+    this.leading,
+    this.leadingWidget,
+    this.trailing,
+    this.borderRadius,
+    this.showDivider = true,
+    this.arrow = true,
+    this.disabled = false,
+    this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+  });
+
+  bool get _isTappable => onTap != null && !disabled;
 
   @override
   Widget build(BuildContext context) {
-    TextTheme textTheme = Theme.of(context).textTheme;
-    ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
-    final titleValid = title.isNotEmpty;
-    final hintValid = hint != null && hint!.isNotEmpty;
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
+    final hasTitle = title.isNotEmpty;
+    final hasHint = hint != null && hint!.isNotEmpty;
+
+    final bgColor = backgroundColor ?? colorScheme.surfaceContainer;
+
+    final border = showDivider
+        ? Divider(
+            indent: 16,
+            endIndent: 16,
+            thickness: 0.8,
+            height: 0.8,
+          )
+        : null;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: _isTappable ? onTap : null,
+      child: Column(
+        children: [
+          Container(
             decoration: BoxDecoration(
-              color: colorScheme.surface,
+              color: bgColor,
               borderRadius: borderRadius,
             ),
-            child: ListTile(
-              leading: leading != null ? Icon(leading) : null,
-              title: !titleValid
-                  ? null
-                  : Text(
-                      title,
-                      style: textTheme.bodyMedium,
-                    ),
-              subtitle: !titleValid && hintValid
-                  ? Text(
-                      hint ?? "",
-                      style: textTheme.labelMedium,
-                    )
-                  : null,
-              trailing: _buildTrailing(),
-              onTap: null,
+            padding: padding,
+            child: Row(
+              children: [
+                if (leading != null || leadingWidget != null) ...[
+                  leadingWidget ??
+                      Icon(leading, size: 24, color: colorScheme.onSurface),
+                  const SizedBox(width: 12),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasTitle) Text(title, style: textTheme.bodyMedium),
+                      if (hasTitle && hasHint) const SizedBox(height: 2),
+                      if (hasHint) Text(hint!, style: textTheme.labelSmall),
+                    ],
+                  ),
+                ),
+                if (trailing != null || _isTappable) ...[
+                  const SizedBox(width: 8),
+                  if (trailing != null) trailing!,
+                  if (_isTappable && arrow) ...[
+                    if (trailing != null) const SizedBox(width: 4),
+                    Icon(Icons.chevron_right,
+                        size: 20, color: colorScheme.onSurfaceVariant),
+                  ],
+                ],
+              ],
             ),
           ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 0.5,
-            thickness: 1,
-            color: colorScheme.surfaceContainer,
-          ),
-      ],
-    );
-  }
-
-  Widget? _buildTrailing() {
-    if (onTap == null) {
-      return trailing;
-    }
-
-    if (trailing == null) {
-      return const Icon(
-        Icons.chevron_right,
-        size: 20,
-      );
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        trailing!,
-        const SizedBox(width: 4),
-        const Icon(
-          Icons.chevron_right,
-          size: 20,
-        ),
-      ],
+          if (border != null) border
+        ],
+      ),
     );
   }
 }
