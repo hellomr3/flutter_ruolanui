@@ -10,7 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  mobx: ^2.6.0
   numberpicker: ^2.1.2
   intl: any
 

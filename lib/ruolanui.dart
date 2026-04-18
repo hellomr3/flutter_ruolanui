@@ -19,6 +19,8 @@ export 'src/dialog/two_pane_selector/selector_item.dart';
 export 'src/dialog/two_pane_selector/two_pane_selector_theme.dart';
 // mixin
 export 'src/mixin/auto_dispose_mixin.dart';
+// widgets
+export 'src/widgets/action_grid.dart';
 // 按钮相关
 export 'src/widgets/btn/block_btn.dart';
 export 'src/widgets/btn/error_btn.dart';
@@ -30,8 +32,5 @@ export 'src/widgets/conditional_builder.dart';
 export 'src/widgets/container/keyboard/keyboard_dismiss.dart';
 export 'src/widgets/multiline_text_editor_page/multiline_text_editor_page.dart';
 export 'src/widgets/swipe_back_listener.dart';
-// widgets
-export 'src/widgets/action_grid.dart';
 export 'src/widgets/textfield/app_textfield.dart';
 export 'src/widgets/textfield/clear_input_textfield.dart';
-export 'src/widgets/textfield/observable_text_controller.dart';
