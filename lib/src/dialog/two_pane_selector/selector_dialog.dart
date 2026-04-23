@@ -11,8 +11,8 @@ enum SelectorMode { single, multiple }
 class SelectorDialog {
   /// 默认的 childAllItemBuilder，返回 null（不显示二级"全部"）
   static T? _defaultChildAllItemBuilder<T extends SelectorItem<ID>, ID>(
-          ID? parentItemId) =>
-      null;
+    ID? parentItemId,
+  ) => null;
 
   /// 显示单选选择器弹窗
   ///
@@ -28,47 +28,53 @@ class SelectorDialog {
       T item,
       bool isSelected,
       bool hasSelectedItems,
-    ) parentItemBuilder,
-    required Widget Function(
-      BuildContext context,
-      T item,
-      bool isSelected,
-    ) childItemBuilder,
+    )
+    parentItemBuilder,
+    required Widget Function(BuildContext context, T item, bool isSelected)
+    childItemBuilder,
     Widget? emptyState,
     Widget? actionButton,
     T? parentAllItem,
     T? Function(ID? parentItemId)? childAllItemBuilder,
     void Function(T? selectedItem)? onItemTap,
+    bool searchable = false,
+    String? searchHint,
+    Widget Function(BuildContext context, T item, bool isSelected)?
+    searchResultItemBuilder,
   }) async {
     final result = await showModalBottomSheet<Result<T>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       isDismissible: false,
-      builder: (context) => TwoPaneSelector<T, ID>(
-        title: title,
-        mode: SelectorMode.single,
-        items: items,
-        theme: theme,
-        initialSelectedIds:
-            initialSelectedId != null ? [initialSelectedId] : null,
-        parentItemBuilder: parentItemBuilder,
-        childItemBuilder: childItemBuilder,
-        emptyState: emptyState,
-        actionButton: actionButton,
-        onConfirm: (items) {
-          final isAll = items.firstOrNull?.id == itemAll;
-          if (isAll) {
-            Navigator.pop(context, Result.success(null));
-            return;
-          }
-          Navigator.pop(context, Result.success(items.firstOrNull));
-        },
-        onBack: () => Navigator.pop(context, Result<T>.failure("取消选择")),
-        parentAllItem: parentAllItem,
-        childAllItemBuilder:
-            childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
-      ),
+      builder:
+          (context) => TwoPaneSelector<T, ID>(
+            title: title,
+            mode: SelectorMode.single,
+            items: items,
+            theme: theme,
+            initialSelectedIds:
+                initialSelectedId != null ? [initialSelectedId] : null,
+            parentItemBuilder: parentItemBuilder,
+            childItemBuilder: childItemBuilder,
+            emptyState: emptyState,
+            actionButton: actionButton,
+            onConfirm: (items) {
+              final isAll = items.firstOrNull?.id == itemAll;
+              if (isAll) {
+                Navigator.pop(context, Result.success(null));
+                return;
+              }
+              Navigator.pop(context, Result.success(items.firstOrNull));
+            },
+            onBack: () => Navigator.pop(context, Result<T>.failure("取消选择")),
+            parentAllItem: parentAllItem,
+            childAllItemBuilder:
+                childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
+            searchable: searchable,
+            searchHint: searchHint,
+            searchResultItemBuilder: searchResultItemBuilder,
+          ),
     );
     return result ?? Result<T>.failure("无返回数据");
   }
@@ -87,55 +93,59 @@ class SelectorDialog {
       T item,
       bool isSelected,
       bool hasSelectedItems,
-    ) parentItemBuilder,
-    required Widget Function(
-      BuildContext context,
-      T item,
-      bool isSelected,
-    ) childItemBuilder,
-    Widget Function(
-      BuildContext context,
-      T item,
-      VoidCallback onRemove,
-    )? selectedItemBuilder,
+    )
+    parentItemBuilder,
+    required Widget Function(BuildContext context, T item, bool isSelected)
+    childItemBuilder,
+    Widget Function(BuildContext context, T item, VoidCallback onRemove)?
+    selectedItemBuilder,
     Widget? emptyState,
     T? parentAllItem,
     T? Function(ID? parentItemId)? childAllItemBuilder,
     void Function(T? selectedItem)? onItemTap,
     int maxSelectedCount = 5,
     VoidCallback? onMaxLimitReached,
+    bool searchable = false,
+    String? searchHint,
+    Widget Function(BuildContext context, T item, bool isSelected)?
+    searchResultItemBuilder,
   }) async {
     final result = await showModalBottomSheet<Result<List<T>>>(
       context: context,
       isScrollControlled: true,
       isDismissible: false,
       backgroundColor: Colors.transparent,
-      builder: (context) => TwoPaneSelector<T, ID>(
-        title: title,
-        mode: SelectorMode.multiple,
-        items: items,
-        theme: theme,
-        initialSelectedIds: initialSelectedIds,
-        parentItemBuilder: parentItemBuilder,
-        childItemBuilder: childItemBuilder,
-        selectedItemBuilder: selectedItemBuilder,
-        emptyState: emptyState,
-        onBack: () => Navigator.pop(context, Result<List<T>>.failure("已取消")),
-        onConfirm: (items) {
-          final isAll = items.firstOrNull?.id == itemAll;
-          if (isAll) {
-            Navigator.pop(context, Result.success(<T>[]));
-            return;
-          }
-          Navigator.pop(context, Result.success(items));
-        },
-        parentAllItem: parentAllItem,
-        childAllItemBuilder:
-            childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
-        onItemTap: onItemTap,
-        maxSelectedCount: maxSelectedCount,
-        onMaxLimitReached: onMaxLimitReached,
-      ),
+      builder:
+          (context) => TwoPaneSelector<T, ID>(
+            title: title,
+            mode: SelectorMode.multiple,
+            items: items,
+            theme: theme,
+            initialSelectedIds: initialSelectedIds,
+            parentItemBuilder: parentItemBuilder,
+            childItemBuilder: childItemBuilder,
+            selectedItemBuilder: selectedItemBuilder,
+            emptyState: emptyState,
+            onBack:
+                () => Navigator.pop(context, Result<List<T>>.failure("已取消")),
+            onConfirm: (items) {
+              final isAll = items.firstOrNull?.id == itemAll;
+              if (isAll) {
+                Navigator.pop(context, Result.success(<T>[]));
+                return;
+              }
+              Navigator.pop(context, Result.success(items));
+            },
+            parentAllItem: parentAllItem,
+            childAllItemBuilder:
+                childAllItemBuilder ?? _defaultChildAllItemBuilder<T, ID>,
+            onItemTap: onItemTap,
+            maxSelectedCount: maxSelectedCount,
+            onMaxLimitReached: onMaxLimitReached,
+            searchable: searchable,
+            searchHint: searchHint,
+            searchResultItemBuilder: searchResultItemBuilder,
+          ),
     );
 
     return result ?? Result<List<T>>.failure("无返回数据");

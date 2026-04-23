@@ -28,21 +28,16 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
     T item,
     bool isSelected,
     bool hasSelectedItems,
-  ) parentItemBuilder;
+  )
+  parentItemBuilder;
 
   /// 右侧子项构建器（只负责 UI 展示，点击由内部处理）
-  final Widget Function(
-    BuildContext context,
-    T item,
-    bool isSelected,
-  ) childItemBuilder;
+  final Widget Function(BuildContext context, T item, bool isSelected)
+  childItemBuilder;
 
   /// 已选项目构建器（用于底部展示栏）
-  final Widget Function(
-    BuildContext context,
-    T item,
-    VoidCallback onRemove,
-  )? selectedItemBuilder;
+  final Widget Function(BuildContext context, T item, VoidCallback onRemove)?
+  selectedItemBuilder;
 
   /// 空状态提示
   final Widget? emptyState;
@@ -80,6 +75,16 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
   /// 返回：二级"全部"选项的数据（null 表示不显示二级"全部"）
   final T? Function(ID? parentItemId) childAllItemBuilder;
 
+  /// 是否显示搜索框
+  final bool searchable;
+
+  /// 搜索框提示文字
+  final String? searchHint;
+
+  /// 搜索结果项构建器（可选，未提供时使用默认样式）
+  final Widget Function(BuildContext context, T item, bool isSelected)?
+  searchResultItemBuilder;
+
   const TwoPaneSelector({
     super.key,
     required this.title,
@@ -99,6 +104,9 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
     this.onMaxLimitReached,
     this.parentAllItem,
     required this.childAllItemBuilder,
+    this.searchable = false,
+    this.searchHint,
+    this.searchResultItemBuilder,
   });
 
   @override
@@ -109,6 +117,7 @@ class TwoPaneSelector<T extends SelectorItem<ID>, ID> extends StatefulWidget {
 class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     extends State<TwoPaneSelector<T, ID>> {
   late final TwoPaneSelectorController<T, ID> controller;
+  final TextEditingController _searchController = TextEditingController();
 
   ColorScheme get colorScheme => Theme.of(context).colorScheme;
 
@@ -126,10 +135,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
       maxSelectedCount: widget.maxSelectedCount,
     );
 
-    controller.init(
-      widget.items,
-      selectedIds: widget.initialSelectedIds,
-    );
+    controller.init(widget.items, selectedIds: widget.initialSelectedIds);
   }
 
   @override
@@ -144,6 +150,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildHeader(),
+          if (widget.searchable) _buildSearchBar(),
           Divider(height: theme.dividerHeight),
           _buildContent(),
           if (widget.mode == SelectorMode.multiple) _buildBottomBar(),
@@ -162,10 +169,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
             children: [
               GestureDetector(
                 onTap: widget.onBack,
-                child: Icon(
-                  Icons.arrow_back,
-                  size: theme.backIconSize,
-                ),
+                child: Icon(Icons.arrow_back, size: theme.backIconSize),
               ),
               SizedBox(width: theme.backIconSpacing),
               Text(
@@ -173,7 +177,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
                 style: theme.titleStyle ?? textTheme.titleLarge,
               ),
               const Spacer(),
-              if (widget.actionButton != null) widget.actionButton!
+              if (widget.actionButton != null) widget.actionButton!,
             ],
           ),
         );
@@ -181,80 +185,201 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     );
   }
 
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SizedBox(
+        height: 36,
+        child: TextField(
+          controller: _searchController,
+          style: textTheme.bodyMedium,
+          decoration: InputDecoration(
+            hintText: widget.searchHint ?? '搜索',
+            hintStyle: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+            prefixIcon: Icon(
+              Icons.search,
+              size: 18,
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
+            ),
+            prefixIconConstraints: const BoxConstraints(
+              minWidth: 36,
+              minHeight: 36,
+            ),
+            suffixIcon: AnimatedBuilder(
+              animation: controller,
+              builder: (context, _) {
+                if (controller.searchQuery.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return GestureDetector(
+                  onTap: () {
+                    _searchController.clear();
+                    controller.clearSearch();
+                  },
+                  child: Icon(
+                    Icons.close,
+                    size: 18,
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
+                );
+              },
+            ),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 36,
+              minHeight: 36,
+            ),
+            contentPadding: EdgeInsets.zero,
+            filled: true,
+            fillColor: colorScheme.surfaceContainer,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          onChanged: (value) => controller.updateSearch(value),
+        ),
+      ),
+    );
+  }
+
   Widget _buildContent() {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        final parentItems = controller.parentItems;
-        final childItems = controller.childItems;
-        final selectedParentId = controller.selectedParentId;
+        // 搜索模式：以扁平列表展示所有匹配的子项
+        if (controller.isSearching) {
+          return _buildSearchResultList();
+        }
+        // 正常模式：双栏布局
+        return _buildTwoPaneLayout();
+      },
+    );
+  }
 
-        return Expanded(
-          child: Row(
-            children: [
-              // 左侧父项列表
-              Container(
-                width: MediaQuery.of(context).size.width *
-                    theme.leftPanelWidthFactor,
-                color: theme.leftPanelColor ?? colorScheme.surface,
-                child: ListView(
-                  padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom),
-                  children: [
-                    // 左侧顶部"全部"选项（如果配置了）
-                    if (widget.parentAllItem != null) _buildParentAllItem(),
-                    // 父项列表
-                    ...parentItems.map((item) {
-                      final isSelected = selectedParentId == item.id;
-                      final hasSelectedItems =
-                          controller.hasSelectedChildren(item);
+  /// 搜索结果列表（扁平展示）
+  Widget _buildSearchResultList() {
+    final results = controller.searchResults;
 
-                      return InkWell(
-                        onTap: () => controller.selectParent(item.id),
-                        child: widget.parentItemBuilder(
-                          context,
-                          item,
-                          isSelected,
-                          hasSelectedItems,
-                        ),
-                      );
-                    }),
-                  ],
+    return Expanded(
+      child:
+          results.isEmpty
+              ? Center(
+                child: Text(
+                  '无匹配结果',
+                  style:
+                      theme.emptyStateTextStyle ??
+                      textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
                 ),
+              )
+              : ListView.builder(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom,
+                ),
+                itemCount: results.length,
+                itemBuilder: (context, index) {
+                  final item = results[index];
+                  final isSelected = controller.selectedIds.contains(item.id);
+                  return InkWell(
+                    onTap: () => _handleItemTap(item),
+                    child:
+                        widget.searchResultItemBuilder != null
+                            ? widget.searchResultItemBuilder!(
+                              context,
+                              item,
+                              isSelected,
+                            )
+                            : _defaultSearchResultItem(item, isSelected),
+                  );
+                },
               ),
-              // 右侧子项列表
-              Expanded(
-                child: Container(
-                  color: theme.rightPanelColor ?? colorScheme.surfaceContainer,
-                  child: selectedParentId == null
+    );
+  }
+
+  /// 双栏布局（正常模式）
+  Widget _buildTwoPaneLayout() {
+    final parentItems = controller.filteredParentItems;
+    final childItems = controller.filteredChildItems;
+    final selectedParentId = controller.selectedParentId;
+
+    return Expanded(
+      child: Row(
+        children: [
+          // 左侧父项列表
+          Container(
+            width:
+                MediaQuery.of(context).size.width * theme.leftPanelWidthFactor,
+            color: theme.leftPanelColor ?? colorScheme.surface,
+            child: ListView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).padding.bottom,
+              ),
+              children: [
+                // 左侧顶部"全部"选项（如果配置了）
+                if (widget.parentAllItem != null) _buildParentAllItem(),
+                // 父项列表
+                ...parentItems.map((item) {
+                  final isSelected = selectedParentId == item.id;
+                  final hasSelectedItems = controller.hasSelectedChildren(item);
+
+                  return InkWell(
+                    onTap: () => controller.selectParent(item.id),
+                    child: widget.parentItemBuilder(
+                      context,
+                      item,
+                      isSelected,
+                      hasSelectedItems,
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          // 右侧子项列表
+          Expanded(
+            child: Container(
+              color: theme.rightPanelColor ?? colorScheme.surfaceContainer,
+              child:
+                  selectedParentId == null
                       ? widget.emptyState ?? _defaultEmptyState()
                       : ListView(
-                          padding: EdgeInsets.only(
-                              bottom: MediaQuery.of(context).padding.bottom),
-                          children: [
-                            // 右侧顶部"全部"选项（如果配置了）
-                            _buildChildAllItem(selectedParentId),
-                            // 子项列表
-                            ...childItems.map((item) {
-                              final isSelected =
-                                  controller.selectedIds.contains(item.id);
-                              return InkWell(
-                                onTap: () => _handleItemTap(item),
-                                child: widget.childItemBuilder(
-                                  context,
-                                  item,
-                                  isSelected,
-                                ),
-                              );
-                            }),
-                          ],
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).padding.bottom,
                         ),
-                ),
-              ),
-            ],
+                        children: [
+                          // 右侧顶部"全部"选项（如果配置了）
+                          _buildChildAllItem(selectedParentId),
+                          // 子项列表
+                          ...childItems.map((item) {
+                            final isSelected = controller.selectedIds.contains(
+                              item.id,
+                            );
+                            return InkWell(
+                              onTap: () => _handleItemTap(item),
+                              child: widget.childItemBuilder(
+                                context,
+                                item,
+                                isSelected,
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
@@ -265,12 +390,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
 
     return InkWell(
       onTap: () => controller.selectParent(allItem.id),
-      child: widget.parentItemBuilder(
-        context,
-        allItem,
-        isSelected,
-        false,
-      ),
+      child: widget.parentItemBuilder(context, allItem, isSelected, false),
     );
   }
 
@@ -295,11 +415,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
 
     return InkWell(
       onTap: () => _handleItemTap(childAllItem),
-      child: widget.childItemBuilder(
-        context,
-        childAllItem,
-        isSelected,
-      ),
+      child: widget.childItemBuilder(context, childAllItem, isSelected),
     );
   }
 
@@ -326,10 +442,44 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
     return Center(
       child: Text(
         theme.emptyStateText,
-        style: theme.emptyStateTextStyle ??
+        style:
+            theme.emptyStateTextStyle ??
             textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurface.withValues(alpha: 0.5),
             ),
+      ),
+    );
+  }
+
+  /// 默认的搜索结果项样式
+  Widget _defaultSearchResultItem(T item, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 20,
+            color: isSelected ? colorScheme.primary : colorScheme.outline,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              item.name,
+              style: textTheme.bodyMedium?.copyWith(
+                color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -389,6 +539,7 @@ class TwoPaneSelectorState<T extends SelectorItem<ID>, ID>
 
   @override
   void dispose() {
+    _searchController.dispose();
     controller.dispose();
     super.dispose();
   }

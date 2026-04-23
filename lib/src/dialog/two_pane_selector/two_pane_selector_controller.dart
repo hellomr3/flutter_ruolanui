@@ -22,6 +22,7 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   List<T> _items = [];
   ID? _selectedParentId;
   final Set<ID> _selectedIds = {};
+  String _searchQuery = '';
 
   /// 数据列表
   List<T> get items => List.unmodifiable(_items);
@@ -32,6 +33,9 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   /// 选中的ID集合
   Set<ID> get selectedIds => Set.unmodifiable(_selectedIds);
 
+  /// 当前搜索关键词
+  String get searchQuery => _searchQuery;
+
   /// 父项列表
   List<T> get parentItems => _items.where((i) => i.pid == null).toList();
 
@@ -39,6 +43,41 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   List<T> get childItems {
     if (_selectedParentId == null) return [];
     return _items.where((i) => i.pid == _selectedParentId).toList();
+  }
+
+  /// 根据搜索关键词过滤后的父项列表
+  List<T> get filteredParentItems {
+    if (_searchQuery.isEmpty) return parentItems;
+    final query = _searchQuery.toLowerCase();
+    // 父项自身匹配，或其下有子项匹配，则保留
+    return parentItems.where((parent) {
+      if (parent.name.toLowerCase().contains(query)) return true;
+      return _items.any(
+        (child) =>
+            child.pid == parent.id && child.name.toLowerCase().contains(query),
+      );
+    }).toList();
+  }
+
+  /// 根据搜索关键词过滤后的子项列表
+  List<T> get filteredChildItems {
+    if (_searchQuery.isEmpty) return childItems;
+    final query = _searchQuery.toLowerCase();
+    return childItems
+        .where((item) => item.name.toLowerCase().contains(query))
+        .toList();
+  }
+
+  /// 是否处于搜索模式（有搜索关键词）
+  bool get isSearching => _searchQuery.isNotEmpty;
+
+  /// 搜索结果：所有匹配的项目（扁平列表，包含父项和子项）
+  List<T> get searchResults {
+    if (_searchQuery.isEmpty) return [];
+    final query = _searchQuery.toLowerCase();
+    return _items
+        .where((item) => item.name.toLowerCase().contains(query))
+        .toList();
   }
 
   /// 选中的项目列表（用于底部展示）
@@ -58,10 +97,7 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   T? get selectedItem {
     if (_selectedIds.isEmpty) return null;
     final id = _selectedIds.first;
-    return _items.firstWhere(
-      (i) => i.id == id,
-      orElse: () => _items.first,
-    );
+    return _items.firstWhere((i) => i.id == id, orElse: () => _items.first);
   }
 
   /// 初始化数据
@@ -208,8 +244,10 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
   /// 检查父项下是否有被选中的子项
   bool hasSelectedChildren(T parentItem) {
     final parentId = parentItem.id;
-    return _selectedIds.any((id) =>
-        id == parentId || _items.any((i) => i.id == id && i.pid == parentId));
+    return _selectedIds.any(
+      (id) =>
+          id == parentId || _items.any((i) => i.id == id && i.pid == parentId),
+    );
   }
 
   /// 检查父项是否被选中（表示选中了该父项下的全部）
@@ -269,6 +307,22 @@ class TwoPaneSelectorController<T extends SelectorItem<ID>, ID>
     _selectedIds.clear();
     _selectedIds.addAll(ids);
     notifyListeners();
+  }
+
+  /// 更新搜索关键词
+  void updateSearch(String query) {
+    if (_searchQuery != query) {
+      _searchQuery = query;
+      notifyListeners();
+    }
+  }
+
+  /// 清除搜索关键词
+  void clearSearch() {
+    if (_searchQuery.isNotEmpty) {
+      _searchQuery = '';
+      notifyListeners();
+    }
   }
 
   /// 清除所有选中项

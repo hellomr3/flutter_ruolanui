@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ruolanui/ruolanui.dart';
 import 'package:ruolanui_example/pages/option.dart';
+import 'package:ruolanui_example/pages/two_pane_selector_page/two_pane_selector_page.dart';
 
 /// RuolanUI 组件示例页面
 class DemoPage extends StatefulWidget {
@@ -142,6 +143,20 @@ class _DemoPageState extends State<DemoPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _SelectorButton(
+          label: '搜索选择器',
+          description: '带搜索框的双栏选择器（单选/多选）',
+          icon: Icons.search,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TwoPaneSelectorPage(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
         _SelectorButton(
           label: '自定义主题',
           description: '自定义选择器样式',
