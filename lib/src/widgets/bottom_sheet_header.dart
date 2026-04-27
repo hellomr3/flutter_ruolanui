@@ -30,7 +30,7 @@ class BottomSheetHeader extends StatelessWidget {
           onTap: onLeftPressed ?? () => Navigator.pop(context),
           behavior: HitTestBehavior.translucent,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Text(
               cancelText,
               style: textTheme.bodyMedium,
@@ -40,7 +40,7 @@ class BottomSheetHeader extends StatelessWidget {
         if (titleText != null)
           Text(
             titleText!,
-            style: textTheme.titleMedium,
+            style: textTheme.bodyMedium,
           ),
         GestureDetector(
           onTap: confirmEnabled ? onRightPressed : null,
@@ -49,8 +49,7 @@ class BottomSheetHeader extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Text(
               confirmText,
-              style: textTheme.bodyMedium!
-                  .copyWith(color: textTheme.titleMedium!.color),
+              style: textTheme.titleMedium,
             ),
           ),
         ),
