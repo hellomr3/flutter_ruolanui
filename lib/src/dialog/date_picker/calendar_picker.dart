@@ -40,15 +40,13 @@ class DefaultPeriodOptions {
 /// 日历选择器文案配置
 class CalendarPickerLabels {
   final String title;
-  final String cancel;
   final String confirm;
-  final String noDate;
+  final String clearDate;
 
   const CalendarPickerLabels({
     this.title = '选择日期',
-    this.cancel = '取消',
     this.confirm = '确定',
-    this.noDate = '无日期',
+    this.clearDate = '清除日期',
   });
 }
 
@@ -61,11 +59,10 @@ Future<Result<DateTime>?> showRLCalendarPicker(
   List<PeriodOption>? periodOptions,
   CalendarPickerLabels? labels,
   bool showPeriodButtons = true,
+  bool showNoDate = true,
   bool isDismissible = false,
 }) async {
   final pickerLabels = labels ?? const CalendarPickerLabels();
-
-  // 显式计算初始值，不依赖子 Widget initState 的副作用
   DateTime? selectedDate = initDate ?? DateTime.now();
 
   return showModalBottomSheet<Result<DateTime>>(
@@ -84,6 +81,7 @@ Future<Result<DateTime>?> showRLCalendarPicker(
         periodOptions: periodOptions ?? DefaultPeriodOptions.defaultOptions,
         labels: pickerLabels,
         showPeriodButtons: showPeriodButtons,
+        showNoDate: showNoDate,
         onChanged: (date) => selectedDate = date,
         onConfirm: () => Navigator.pop(context, Result.success(selectedDate)),
         onCancel: () => Navigator.pop(context),
@@ -99,6 +97,7 @@ class CalendarPickerWidget extends StatefulWidget {
   final List<PeriodOption> periodOptions;
   final CalendarPickerLabels labels;
   final bool showPeriodButtons;
+  final bool showNoDate;
   final ValueChanged<DateTime?>? onChanged;
   final VoidCallback? onConfirm;
   final VoidCallback? onCancel;
@@ -111,6 +110,7 @@ class CalendarPickerWidget extends StatefulWidget {
     required this.periodOptions,
     required this.labels,
     this.showPeriodButtons = true,
+    this.showNoDate = true,
     this.onChanged,
     this.onConfirm,
     this.onCancel,
@@ -145,7 +145,6 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     } else {
       date = addPeriod(_selectedDate, option);
     }
-
     date = _clampDateToRange(date);
     setState(() {
       _selectedDate = date;
@@ -183,48 +182,72 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildHeader(colorScheme, textTheme),
-          if (_isCalendarMode) ...[
-            _buildWeekdayHeader(colorScheme, textTheme),
-            Flexible(child: _buildCalendarGrid(colorScheme, textTheme)),
-          ] else
-            Flexible(child: _buildDatePicker(colorScheme, textTheme)),
-          if (widget.showPeriodButtons)
-            _buildQuickButtons(colorScheme, textTheme),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+          Flexible(child: _buildCalendarArea(colorScheme, textTheme)),
+          _buildActions(colorScheme, textTheme),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
       ),
     );
   }
 
+  /// 顶部：左侧标题，右侧关闭按钮
   Widget _buildHeader(ColorScheme colorScheme, TextTheme textTheme) {
-    final locale = Localizations.localeOf(context).toString();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 0.5,
-          ),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.only(left: 20, right: 8, top: 12, bottom: 4),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: widget.onCancel,
-            behavior: HitTestBehavior.translucent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Text(
-                widget.labels.cancel,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
+          Text(
+            widget.labels.title,
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
           const Spacer(),
+          IconButton(
+            icon: Icon(Icons.close,
+                size: 22, color: colorScheme.onSurfaceVariant),
+            onPressed: widget.onCancel,
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 日历内容区
+  Widget _buildCalendarArea(ColorScheme colorScheme, TextTheme textTheme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_isCalendarMode) ...[
+            // _buildMonthNav(colorScheme, textTheme),
+            _buildWeekdayHeader(colorScheme, textTheme),
+            Flexible(child: _buildCalendarGrid(colorScheme, textTheme)),
+          ] else
+            Flexible(child: _buildDatePicker()),
+          _buildQuickOptions(colorScheme, textTheme),
+        ],
+      ),
+    );
+  }
+
+  /// 月份导航行（仅日历模式）：左右箭头 + 年月 + 选中日期
+  Widget _buildMonthNav(ColorScheme colorScheme, TextTheme textTheme) {
+    final locale = Localizations.localeOf(context).toString();
+    final selectedDateStr = DateFormat('yyyy/MM/dd').format(_selectedDate);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 12, top: 8, bottom: 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
           IconButton(
             icon: const Icon(Icons.chevron_left, size: 22),
             onPressed: () => _changeMonth(-1),
@@ -245,27 +268,29 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                 setState(() {
                   _displayMonth = DateTime(newDate.year, newDate.month);
                   _selectedDate = DateTime(
-                      newDate.year,
-                      newDate.month,
-                      _selectedDate.day.clamp(
-                          1, DateTime(newDate.year, newDate.month + 1, 0).day));
+                    newDate.year,
+                    newDate.month,
+                    _selectedDate.day.clamp(
+                        1, DateTime(newDate.year, newDate.month + 1, 0).day),
+                  );
                 });
                 widget.onChanged?.call(_selectedDate);
               }
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     DateFormat.yMMMM(locale).format(_displayMonth),
-                    style: textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(width: 2),
                   Icon(Icons.arrow_drop_down,
-                      size: 20, color: colorScheme.onSurfaceVariant),
+                      size: 18, color: colorScheme.onSurfaceVariant),
                 ],
               ),
             ),
@@ -274,21 +299,6 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
             icon: const Icon(Icons.chevron_right, size: 22),
             onPressed: () => _changeMonth(1),
             visualDensity: VisualDensity.compact,
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: widget.onConfirm,
-            behavior: HitTestBehavior.translucent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Text(
-                widget.labels.confirm,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ),
         ],
       ),
@@ -303,7 +313,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     });
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      padding: const EdgeInsets.only(left: 12, right: 12, top: 16, bottom: 4),
       child: Row(
         children: weekdays.map((weekday) {
           return Expanded(
@@ -366,7 +376,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       child: GridView.count(
         crossAxisCount: 7,
         shrinkWrap: true,
@@ -413,7 +423,8 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: isToday && !isSelected
-              ? Border.all(color: colorScheme.primary.withValues(alpha: 0.4), width: 1)
+              ? Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.4), width: 1)
               : null,
         ),
         child: Center(
@@ -436,113 +447,121 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
     );
   }
 
-  Widget _buildQuickButtons(ColorScheme colorScheme, TextTheme textTheme) {
-    final allOptions = [
-      PeriodOption(label: widget.labels.noDate, type: PeriodType.noDate),
-      ...widget.periodOptions,
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 0.5,
-          ),
-        ),
-      ),
+  /// 快捷选项行：左侧切换视图按钮 + 快捷选项
+  Widget _buildQuickOptions(ColorScheme colorScheme, TextTheme textTheme) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 10, right: 12, bottom: 10, top: 4),
       child: Row(
         children: [
-          // 日历/滚轮切换按钮
-          TextTag(
-            label: '',
-            theme: TextTagTheme(
-              padding: const EdgeInsets.all(8),
-              backgroundColor: colorScheme.surfaceContainerHighest,
-            ),
-            onTap: () {
-              setState(() {
-                _isCalendarMode = !_isCalendarMode;
-              });
-            },
-            child: Icon(
+          // 切换视图按钮
+          IconButton(
+            onPressed: () => setState(() => _isCalendarMode = !_isCalendarMode),
+            icon: Icon(
               _isCalendarMode
-                  ? Icons.view_carousel_outlined
+                  ? Icons.calendar_view_week
                   : Icons.calendar_month_outlined,
-              size: 20,
+              size: 18,
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(width: 10),
-          // 快捷选项
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: allOptions.map((option) {
-                  final isNoDate = option.type == PeriodType.noDate;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: TextTag(
-                      label: option.label,
-                      theme: TextTagTheme(
-                        backgroundColor: isNoDate
-                            ? colorScheme.errorContainer.withValues(alpha: 0.6)
-                            : null,
-                        textStyle: textTheme.labelMedium?.copyWith(
-                          color: isNoDate
-                              ? colorScheme.onErrorContainer
-                              : colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
+          if (widget.showPeriodButtons && widget.periodOptions.isNotEmpty) ...[
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: widget.periodOptions.map((option) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: TextTag(
+                        label: option.label,
+                        theme: TextTagTheme(
+                          backgroundColor: colorScheme.surface,
+                          textStyle: textTheme.labelMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 6),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 7),
+                        onTap: () {
+                          if (option.type == PeriodType.today) {
+                            final today = _clampDateToRange(DateTime.now());
+                            setState(() {
+                              _selectedDate = today;
+                              _displayMonth = DateTime(today.year, today.month);
+                            });
+                            widget.onChanged?.call(today);
+                          } else {
+                            _selectPeriodOption(option);
+                          }
+                        },
                       ),
-                      onTap: () {
-                        if (isNoDate) {
-                          widget.onChanged?.call(null);
-                        } else if (option.type == PeriodType.today) {
-                          final today = _clampDateToRange(DateTime.now());
-                          setState(() {
-                            _selectedDate = today;
-                            _displayMonth =
-                                DateTime(today.year, today.month);
-                          });
-                          widget.onChanged?.call(today);
-                        } else {
-                          _selectPeriodOption(option);
-                        }
-                      },
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildDatePicker(ColorScheme colorScheme, TextTheme textTheme) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DatePickerWidget(
-        key: ValueKey('date_picker_${_selectedDate.millisecondsSinceEpoch}'),
-        mode: DatePickerMode.yearMonthDay,
-        initDate: _selectedDate,
-        minDate: widget.minDate,
-        maxDate: widget.maxDate,
-        onChanged: (date) {
-          _selectedDate = date;
-          _displayMonth = DateTime(date.year, date.month);
-          widget.onChanged?.call(date);
-        },
+  Widget _buildDatePicker() {
+    return DatePickerWidget(
+      key: ValueKey('date_picker_${_selectedDate.millisecondsSinceEpoch}'),
+      mode: DatePickerMode.yearMonthDay,
+      initDate: _selectedDate,
+      minDate: widget.minDate,
+      maxDate: widget.maxDate,
+      onChanged: (date) {
+        _selectedDate = date;
+        _displayMonth = DateTime(date.year, date.month);
+        widget.onChanged?.call(date);
+      },
+    );
+  }
+
+  /// 底部操作：确认按钮（整行） + 清除日期文本
+  Widget _buildActions(ColorScheme colorScheme, TextTheme textTheme) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: widget.onConfirm,
+              style: FilledButton.styleFrom(
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(widget.labels.confirm),
+            ),
+          ),
+          if (widget.showNoDate)
+            GestureDetector(
+              onTap: () {
+                widget.onChanged?.call(null);
+                widget.onConfirm?.call();
+              },
+              behavior: HitTestBehavior.translucent,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Text(
+                  widget.labels.clearDate,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -551,19 +570,15 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
 /// 根据PeriodOption添加时间
 DateTime addPeriod(DateTime date, PeriodOption option) {
   DateTime result = date;
-
   if (option.days != 0) {
     result = result.add(Duration(days: option.days));
   }
-
   if (option.months != 0) {
     result = addMonths(result, option.months);
   }
-
   if (option.years != 0) {
     result = addMonths(result, option.years * 12);
   }
-
   return result;
 }
 
@@ -576,13 +591,11 @@ DateTime addMonths(DateTime date, int months) {
     newYear++;
     newMonth -= 12;
   }
-
   while (newMonth < 1) {
     newYear--;
     newMonth += 12;
   }
 
-  // 防止年份越界到不合理范围
   newYear = newYear.clamp(1, 9999);
 
   int newDay = date.day;
