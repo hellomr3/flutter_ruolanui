@@ -20,11 +20,8 @@ class CalendarActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 0),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 4, bottom: 0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -33,12 +30,16 @@ class CalendarActions extends StatelessWidget {
             label: confirmText,
             onPressed: onConfirm,
           ),
-          if (showClearDate)
+          if (showClearDate) ...[
+            SizedBox(
+              height: 4,
+            ),
             TextBtn(
               label: clearDateText,
               width: double.infinity,
               onPressed: onClearDate,
             ),
+          ]
         ],
       ),
     );

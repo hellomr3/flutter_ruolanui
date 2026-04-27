@@ -128,6 +128,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -202,7 +203,6 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
               widget.onConfirm?.call();
             },
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
         ],
       ),
     );
