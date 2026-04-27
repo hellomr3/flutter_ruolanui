@@ -70,7 +70,9 @@ Future<Result<DateTime>?> showRLDatePicker(
 }) async {
   final pickerLabels = labels ?? const DatePickerLabels();
   final pickerTheme = theme ?? const DatePickerTheme();
-  DateTime? selectedDate;
+
+  // 显式计算初始值，不依赖子 Widget initState 的副作用
+  DateTime selectedDate = _clampDate(initDate ?? DateTime.now(), min, max);
 
   return showModalBottomSheet<Result<DateTime>>(
     context: context,
@@ -325,4 +327,11 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
       ),
     );
   }
+}
+
+/// 将日期限制在 [min, max] 范围内
+DateTime _clampDate(DateTime date, DateTime? min, DateTime? max) {
+  if (min != null && date.isBefore(min)) return min;
+  if (max != null && date.isAfter(max)) return max;
+  return date;
 }

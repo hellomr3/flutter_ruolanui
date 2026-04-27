@@ -63,7 +63,9 @@ Future<Result<DateTime>?> showRLCalendarPicker(
   bool showPeriodButtons = true,
 }) async {
   final pickerLabels = labels ?? const CalendarPickerLabels();
-  DateTime? selectedDate;
+
+  // 显式计算初始值，不依赖子 Widget initState 的副作用
+  DateTime? selectedDate = initDate ?? DateTime.now();
 
   return showModalBottomSheet<Result<DateTime>>(
     context: context,
@@ -291,7 +293,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
               child: Text(
                 weekday,
                 style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -388,7 +390,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
           color: isSelected
               ? colorScheme.primary
               : isToday
-                  ? colorScheme.primary.withOpacity(0.2)
+                  ? colorScheme.primary.withValues(alpha: 0.2)
                   : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
@@ -399,9 +401,9 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
               color: isSelected
                   ? colorScheme.onPrimary
                   : isDisabled
-                      ? colorScheme.onSurface.withOpacity(0.3)
+                      ? colorScheme.onSurface.withValues(alpha: 0.3)
                       : !isCurrentMonth
-                          ? colorScheme.onSurface.withOpacity(0.4)
+                          ? colorScheme.onSurface.withValues(alpha: 0.4)
                           : colorScheme.onSurface,
               fontWeight:
                   isSelected || isToday ? FontWeight.w600 : FontWeight.normal,
@@ -455,7 +457,7 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                   },
                   style: TextButton.styleFrom(
                     backgroundColor:
-                        colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -527,6 +529,9 @@ DateTime addMonths(DateTime date, int months) {
     newYear--;
     newMonth += 12;
   }
+
+  // 防止年份越界到不合理范围
+  newYear = newYear.clamp(1, 9999);
 
   int newDay = date.day;
   int daysInNewMonth = DateTime(newYear, newMonth + 1, 0).day;

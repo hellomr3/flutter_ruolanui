@@ -73,7 +73,7 @@ class RuolanUIExampleApp extends StatelessWidget {
           secondaryContainer: const Color(0xFFF2F2F7),
         ),
       ),
-      home: TwoPaneSelectorPage(),
+      home: DatePage(),
     );
   }
 }

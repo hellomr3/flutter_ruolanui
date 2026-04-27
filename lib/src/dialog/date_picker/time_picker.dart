@@ -68,7 +68,11 @@ Future<Result<DateTime>?> showTimePicker24(
 }) async {
   final pickerLabels = labels ?? const TimePickerLabels();
   final pickerTheme = theme ?? const TimePickerTheme();
-  DateTime? selectedTime;
+
+  // 显式计算初始值，不依赖子 Widget initState 的副作用
+  final init = initTime ?? DateTime.now();
+  DateTime selectedTime = DateTime(
+      init.year, init.month, init.day, init.hour, init.minute, init.second);
 
   return showModalBottomSheet<Result<DateTime>>(
     context: context,
@@ -76,8 +80,6 @@ Future<Result<DateTime>?> showTimePicker24(
       borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
     ),
     builder: (context) {
-      final textTheme = Theme.of(context).textTheme;
-
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -163,9 +165,10 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
   }
 
   void _notifyChange() {
-    final now = DateTime.now();
+    // 保留 initTime 的日期部分，仅替换时分秒
+    final base = widget.initTime ?? DateTime.now();
     widget.onChanged?.call(
-      DateTime(now.year, now.month, now.day, selectedHour, selectedMinute,
+      DateTime(base.year, base.month, base.day, selectedHour, selectedMinute,
           selectedSecond),
     );
   }
