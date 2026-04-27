@@ -32,5 +32,6 @@ export 'src/widgets/conditional_builder.dart';
 export 'src/widgets/container/keyboard/keyboard_dismiss.dart';
 export 'src/widgets/multiline_text_editor_page/multiline_text_editor_page.dart';
 export 'src/widgets/swipe_back_listener.dart';
+export 'src/widgets/tag.dart';
 export 'src/widgets/textfield/app_textfield.dart';
 export 'src/widgets/textfield/clear_input_textfield.dart';

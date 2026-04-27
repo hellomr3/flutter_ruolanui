@@ -65,6 +65,7 @@ Future<Result<DateTime>?> showTimePicker24(
   TimePickerMode mode = TimePickerMode.hourMinute,
   TimePickerLabels? labels,
   TimePickerTheme? theme,
+  bool isDismissible = false,
 }) async {
   final pickerLabels = labels ?? const TimePickerLabels();
   final pickerTheme = theme ?? const TimePickerTheme();
@@ -76,6 +77,8 @@ Future<Result<DateTime>?> showTimePicker24(
 
   return showModalBottomSheet<Result<DateTime>>(
     context: context,
+    isDismissible: isDismissible,
+    enableDrag: isDismissible,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
     ),
@@ -193,6 +196,17 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
         child: Stack(
           alignment: Alignment.center,
           children: [
+            // 选中框遮罩（放在底层）
+            IgnorePointer(
+              child: Container(
+                height: widget.itemExtend,
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: highlightColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
             Row(
               children: [
                 // 时
@@ -257,16 +271,6 @@ class _TimePickerWidgetState extends State<TimePickerWidget> {
                     ),
                   ),
               ],
-            ),
-            // 选中框遮罩
-            IgnorePointer(
-              child: Container(
-                height: widget.itemExtend,
-                decoration: BoxDecoration(
-                  color: highlightColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
             ),
           ],
         ),
