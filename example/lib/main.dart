@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ruolanui/ruolanui.dart';
 import 'package:ruolanui_example/pages/date_page/date_page.dart';
+import 'package:ruolanui_example/pages/option/option.dart';
 import 'package:ruolanui_example/pages/two_pane_selector_page/two_pane_selector_page.dart';
 
 import 'demo_page.dart';
@@ -73,7 +74,7 @@ class RuolanUIExampleApp extends StatelessWidget {
           secondaryContainer: const Color(0xFFF2F2F7),
         ),
       ),
-      home: DatePage(),
+      home: Option(),
     );
   }
 }

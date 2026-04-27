@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruolanui/ruolanui.dart';
-import 'package:ruolanui_example/pages/option.dart';
+import 'package:ruolanui_example/pages/option/option.dart';
 import 'package:ruolanui_example/pages/two_pane_selector_page/two_pane_selector_page.dart';
 
 /// RuolanUI 组件示例页面

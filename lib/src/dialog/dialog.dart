@@ -8,6 +8,7 @@ Future<Result<int>> showOptionsDialog({
   required BuildContext context,
   required List<OptionItem> options,
   int? value,
+  String? title,
   String cancelText = "取消",
 }) async {
   final result = await showModalBottomSheet<Result<int>>(
@@ -18,6 +19,7 @@ Future<Result<int>> showOptionsDialog({
         (c) => OptionsContent(
           options: options,
           value: value,
+          title: title,
           cancelText: cancelText,
         ),
   );
@@ -29,6 +31,7 @@ Future<Result<int>> showSampleOptionsDialog({
   required BuildContext context,
   required List<String> options,
   int? value,
+  String? title,
   String cancelText = "取消",
 }) async {
   final newOptions = List.generate(
@@ -43,6 +46,7 @@ Future<Result<int>> showSampleOptionsDialog({
         (c) => OptionsContent(
           options: newOptions,
           value: value,
+          title: title,
           cancelText: cancelText,
         ),
   );
