@@ -29,9 +29,17 @@ class MonthNav extends StatelessWidget {
     final selectedDateStr = DateFormat('yyyy/MM/dd').format(selectedDate);
 
     return Padding(
-      padding: const EdgeInsets.only(left: 4, right: 12, top: 8, bottom: 0),
+      padding: const EdgeInsets.only(left: 12, right: 4, top: 8, bottom: 0),
       child: Row(
         children: [
+          Text(
+            selectedDateStr,
+            style: textTheme.labelLarge?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
           IconButton(
             icon: const Icon(Icons.chevron_left, size: 22),
             onPressed: () => onChangeMonth(-1),
@@ -74,14 +82,6 @@ class MonthNav extends StatelessWidget {
             icon: const Icon(Icons.chevron_right, size: 22),
             onPressed: () => onChangeMonth(1),
             visualDensity: VisualDensity.compact,
-          ),
-          const Spacer(),
-          Text(
-            selectedDateStr,
-            style: textTheme.labelLarge?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
           ),
         ],
       ),

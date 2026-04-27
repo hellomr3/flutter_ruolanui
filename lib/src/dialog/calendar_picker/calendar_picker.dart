@@ -149,6 +149,25 @@ class _CalendarPickerWidgetState extends State<CalendarPickerWidget> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_isCalendarMode) ...[
+                    MonthNav(
+                      displayMonth:_displayMonth ,
+                      selectedDate: _selectedDate,
+                      minDate: widget.minDate,
+                      maxDate: widget.maxDate,
+                      onChangeMonth: (delta) {
+                        setState(() {
+                          _displayMonth = DateTime(
+                            _displayMonth.year,
+                            _displayMonth.month + delta,
+                          );
+                        });
+                      },
+                      onMonthYearPicked: (date) {
+                        setState(() {
+                          _displayMonth = DateTime(date.year, date.month);
+                        });
+                      },
+                    ),
                     const WeekdayHeader(),
                     Flexible(
                       child: CalendarGrid(
