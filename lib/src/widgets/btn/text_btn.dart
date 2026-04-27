@@ -5,6 +5,8 @@ class TextBtn extends StatelessWidget {
 
   final double height;
 
+  final double? width;
+
   final VoidCallback? onPressed;
 
   final Color? textColor;
@@ -12,6 +14,7 @@ class TextBtn extends StatelessWidget {
   const TextBtn({
     super.key,
     required this.label,
+    this.width,
     this.height = 44,
     this.onPressed,
     this.textColor,
@@ -23,6 +26,7 @@ class TextBtn extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     return SizedBox(
       height: height,
+      width: width,
       child: TextButton(
         style: FilledButton.styleFrom(padding: EdgeInsets.zero),
         onPressed: () {
