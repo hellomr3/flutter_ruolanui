@@ -15,6 +15,8 @@ export 'src/dialog/dialog.dart';
 // dialog
 export 'src/dialog/input_dialog/input_utils.dart';
 export 'src/dialog/options/option_item.dart';
+export 'src/dialog/options/wrap_option_items.dart';
+export 'src/dialog/options/wrap_options_dialog.dart';
 // 两列两级选择器
 export 'src/dialog/two_pane_selector/selector_dialog.dart';
 export 'src/dialog/two_pane_selector/selector_item.dart';
