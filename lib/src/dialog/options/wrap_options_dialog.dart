@@ -25,12 +25,8 @@ class WrapOptionsDialog<T> extends StatefulWidget {
   /// - [index] 当前索引
   /// - [isSelected] 是否选中
   /// - [onTap] 点击回调，调用后切换选中状态
-  final Widget Function(
-    T item,
-    int index,
-    bool isSelected,
-    VoidCallback onTap,
-  ) itemBuilder;
+  final Widget Function(T item, int index, bool isSelected, VoidCallback onTap)
+  itemBuilder;
 
   /// Wrap 水平间距
   final double spacing;
@@ -100,6 +96,7 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: screenHeight * 0.85,
+          minHeight: screenHeight * 0.6,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -114,8 +111,10 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
             // 中间可滚动区域
             Flexible(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 physics: const BouncingScrollPhysics(),
                 child: Wrap(
                   spacing: widget.spacing,
@@ -139,8 +138,8 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
                 cancelText: widget.cancelText,
                 confirmText: widget.confirmText,
                 onCancel: () => Navigator.pop(context),
-                onConfirm: () =>
-                    Navigator.pop(context, Result.success(_selected)),
+                onConfirm:
+                    () => Navigator.pop(context, Result.success(_selected)),
               ),
 
             // 单选时底部留出安全区间距
@@ -159,11 +158,7 @@ class _Header extends StatelessWidget {
   final Widget? trailing;
   final VoidCallback? onClose;
 
-  const _Header({
-    required this.title,
-    this.trailing,
-    this.onClose,
-  });
+  const _Header({required this.title, this.trailing, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +171,7 @@ class _Header extends StatelessWidget {
         children: [
           Text(
             title,
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const Spacer(),
           if (trailing != null) trailing!,
@@ -226,11 +219,7 @@ class _BottomActions extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: TextBtn(
-              label: cancelText,
-              height: 44,
-              onPressed: onCancel,
-            ),
+            child: TextBtn(label: cancelText, height: 44, onPressed: onCancel),
           ),
           const SizedBox(width: 12),
           Expanded(
