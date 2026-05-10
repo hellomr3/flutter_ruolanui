@@ -14,8 +14,9 @@ class TextTagTheme {
   /// 选中时的文本样式
   final TextStyle? selectedTextStyle;
 
-  /// 圆角半径，为 null 时使用高度的一半（全圆角）
-  final double? borderRadius;
+  /// 圆角，为 null 时使用高度的一半（全圆角）。
+  /// 可通过 [BorderRadius.only] 等分别配置四个角。
+  final BorderRadius? borderRadius;
 
   /// 内边距
   final EdgeInsets padding;
@@ -106,7 +107,7 @@ class _TextTagBody extends StatelessWidget {
   final Color bgColor;
   final TextStyle? style;
   final BorderSide? border;
-  final double? borderRadius;
+  final BorderRadius? borderRadius;
   final EdgeInsets padding;
   final String label;
   final Widget? child;
@@ -127,7 +128,7 @@ class _TextTagBody extends StatelessWidget {
     final fontSize = style?.fontSize ?? 12;
     final lineHeight = style?.height ?? 1.2;
     final estimatedHeight = fontSize * lineHeight + padding.vertical;
-    final radius = borderRadius ?? estimatedHeight / 2;
+    final resolvedRadius = borderRadius ?? BorderRadius.circular(estimatedHeight / 2);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -135,7 +136,7 @@ class _TextTagBody extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: resolvedRadius,
         border: border != null ? Border.fromBorderSide(border!) : null,
       ),
       child: child ?? Text(label, style: style),
