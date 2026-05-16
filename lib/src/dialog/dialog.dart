@@ -86,30 +86,39 @@ Future<Result<Set<int>>> showWrapOptionsDialog<T>({
   required List<T> options,
   Set<int> initialSelected = const {},
   required Widget Function(
-          T item, int index, bool isSelected, VoidCallback onTap)
-      itemBuilder,
+    T item,
+    int index,
+    bool isSelected,
+    VoidCallback onTap,
+  )
+  itemBuilder,
   double spacing = 10,
   double runSpacing = 10,
   bool multiSelect = true,
   String confirmText = "确定",
   String cancelText = "取消",
+  VoidCallback? onCancel,
+  Widget? emptyWidget,
 }) async {
   final result = await showModalBottomSheet<Result<Set<int>>>(
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
-    builder: (c) => WrapOptionsDialog<T>(
-      title: title,
-      trailing: trailing,
-      options: options,
-      initialSelected: initialSelected,
-      itemBuilder: itemBuilder,
-      spacing: spacing,
-      runSpacing: runSpacing,
-      multiSelect: multiSelect,
-      confirmText: confirmText,
-      cancelText: cancelText,
-    ),
+    builder:
+        (c) => WrapOptionsDialog<T>(
+          title: title,
+          trailing: trailing,
+          options: options,
+          initialSelected: initialSelected,
+          itemBuilder: itemBuilder,
+          spacing: spacing,
+          runSpacing: runSpacing,
+          multiSelect: multiSelect,
+          confirmText: confirmText,
+          cancelText: cancelText,
+          onCancel: onCancel,
+          emptyWidget: emptyWidget,
+        ),
   );
 
   return result ?? Result.failure("Cancel");
@@ -138,11 +147,7 @@ Future<Result<Set<int>>> showTextWrapOptionsDialog({
     confirmText: confirmText,
     cancelText: cancelText,
     itemBuilder: (item, index, isSelected, onTap) {
-      return TextTag(
-        label: item,
-        selected: isSelected,
-        onTap: onTap,
-      );
+      return TextTag(label: item, selected: isSelected, onTap: onTap);
     },
   );
 }

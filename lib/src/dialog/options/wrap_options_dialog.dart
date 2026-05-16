@@ -43,6 +43,12 @@ class WrapOptionsDialog<T> extends StatefulWidget {
   /// 取消按钮文本
   final String cancelText;
 
+  /// 取消按钮回调，默认关闭弹窗
+  final VoidCallback? onCancel;
+
+  /// 选项为空时展示的组件
+  final Widget? emptyWidget;
+
   const WrapOptionsDialog({
     super.key,
     required this.title,
@@ -55,6 +61,8 @@ class WrapOptionsDialog<T> extends StatefulWidget {
     this.multiSelect = true,
     this.confirmText = "确定",
     this.cancelText = "取消",
+    this.onCancel,
+    this.emptyWidget,
   });
 
   @override
@@ -110,26 +118,33 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
 
             // 中间可滚动区域
             Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                physics: const BouncingScrollPhysics(),
-                child: Wrap(
-                  spacing: widget.spacing,
-                  runSpacing: widget.runSpacing,
-                  children: List.generate(widget.options.length, (index) {
-                    final isSelected = _selected.contains(index);
-                    return widget.itemBuilder(
-                      widget.options[index],
-                      index,
-                      isSelected,
-                      () => _toggle(index),
-                    );
-                  }),
-                ),
-              ),
+              child: widget.options.isEmpty && widget.emptyWidget != null
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 24),
+                      child: widget.emptyWidget,
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      physics: const BouncingScrollPhysics(),
+                      child: Wrap(
+                        spacing: widget.spacing,
+                        runSpacing: widget.runSpacing,
+                        children:
+                            List.generate(widget.options.length, (index) {
+                          final isSelected = _selected.contains(index);
+                          return widget.itemBuilder(
+                            widget.options[index],
+                            index,
+                            isSelected,
+                            () => _toggle(index),
+                          );
+                        }),
+                      ),
+                    ),
             ),
 
             // 底部操作栏（仅多选时展示）
@@ -137,7 +152,7 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
               _BottomActions(
                 cancelText: widget.cancelText,
                 confirmText: widget.confirmText,
-                onCancel: () => Navigator.pop(context),
+                onCancel: widget.onCancel ?? () => Navigator.pop(context),
                 onConfirm:
                     () => Navigator.pop(context, Result.success(_selected)),
               ),
