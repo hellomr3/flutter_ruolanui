@@ -97,7 +97,8 @@ class BlockBtn extends StatelessWidget {
                   // 后置组件/箭头
                   if (trailing != null || _isTappable) ...[
                     const SizedBox(width: 8),
-                    if (trailing != null) trailing!,
+                    if (trailing != null)
+                      Flexible(child: trailing!),
                     if (_isTappable && arrow) ...[
                       if (trailing != null) const SizedBox(width: 4),
                       Icon(
