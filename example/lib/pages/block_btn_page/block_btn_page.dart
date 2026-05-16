@@ -105,6 +105,33 @@ class BlockBtnPage extends StatelessWidget {
             leading: Icons.card_giftcard,
             onTap: () => _showToast(context, '卡片风格'),
           ),
+          _section('hint 展示位置'),
+          BlockBtn(
+            title: 'hint 在标题底部（默认）',
+            hint: '这是底部提示文字',
+            onTap: () => _showToast(context, '底部hint'),
+          ),
+          BlockBtn(
+            title: 'hint 在右侧',
+            hint: '这是右侧提示',
+            hintPosition: BlockBtnHintPosition.trailing,
+            onTap: () => _showToast(context, '右侧hint'),
+          ),
+          BlockBtn(
+            title: 'hint 超长在右侧',
+            hint: '这是一段非常非常非常长的右侧提示文字用来测试截断',
+            hintPosition: BlockBtnHintPosition.trailing,
+            onTap: () => _showToast(context, '右侧hint超长'),
+          ),
+          BlockBtn(
+            title: '有 trailing 时忽略 hintPosition',
+            hint: '这段 hint 仍在底部',
+            hintPosition: BlockBtnHintPosition.trailing,
+            trailing: Text('自定义', style: TextStyle(
+              color: Theme.of(context).colorScheme.primary, fontSize: 13,
+            )),
+            onTap: () => _showToast(context, 'trailing优先'),
+          ),
           _section('自定义内边距'),
           BlockBtn(
             title: '紧凑内边距',

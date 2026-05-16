@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+/// hint 展示位置
+enum BlockBtnHintPosition {
+  /// 标题底部（默认）
+  below,
+
+  /// 右侧（trailing 区域，箭头左侧）
+  trailing,
+}
+
 class BlockBtn extends StatelessWidget {
   final String title;
   final String? hint;
@@ -13,8 +22,9 @@ class BlockBtn extends StatelessWidget {
   final bool disabled;
   final Color? backgroundColor;
   final EdgeInsets padding;
-  final double indent; // 新增：左缩进控制
-  final double endIndent; // 新增：右缩进控制
+  final double indent;
+  final double endIndent;
+  final BlockBtnHintPosition hintPosition;
 
   const BlockBtn({
     super.key,
@@ -32,9 +42,14 @@ class BlockBtn extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     this.indent = 16.0,
     this.endIndent = 16.0,
+    this.hintPosition = BlockBtnHintPosition.below,
   });
 
   bool get _isTappable => onTap != null && !disabled;
+
+  /// 存在 trailing 时，hintPosition 不生效，hint 始终在标题底部
+  bool get _showHintAsTrailing =>
+      hintPosition == BlockBtnHintPosition.trailing && trailing == null;
 
   @override
   Widget build(BuildContext context) {
@@ -46,6 +61,19 @@ class BlockBtn extends StatelessWidget {
     final hasHint = hint != null && hint!.isNotEmpty;
 
     final bgColor = backgroundColor ?? colorScheme.surfaceContainer;
+
+    // 构建 hint Text Widget
+    Widget? hintWidget;
+    if (hasHint && _showHintAsTrailing) {
+      hintWidget = Text(
+        hint!,
+        style: textTheme.labelSmall?.copyWith(
+          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+        ),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+      );
+    }
 
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
@@ -82,25 +110,40 @@ class BlockBtn extends StatelessWidget {
                               color: disabled ? colorScheme.outline : null,
                             ),
                           ),
-                        if (hasTitle && hasHint) const SizedBox(height: 2),
-                        if (hasHint)
+                        // hint 在标题底部展示
+                        if (hasTitle && hasHint && !_showHintAsTrailing)
+                          const SizedBox(height: 2),
+                        if (hasHint && !_showHintAsTrailing)
                           Text(
                             hint!,
                             style: textTheme.labelSmall?.copyWith(
-                              color:
-                                  colorScheme.onSurfaceVariant.withOpacity(0.7),
+                              color: colorScheme.onSurfaceVariant
+                                  .withOpacity(0.7),
                             ),
                           ),
                       ],
                     ),
                   ),
-                  // 后置组件/箭头
-                  if (trailing != null || _isTappable) ...[
+                  // 后置区域：hint（trailing 模式）+ 自定义 trailing + 箭头
+                  if (hintWidget != null || trailing != null || _isTappable) ...[
                     const SizedBox(width: 8),
+                    if (hintWidget != null)
+                      Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: hintWidget,
+                        ),
+                      ),
                     if (trailing != null)
-                      Flexible(child: trailing!),
+                      Flexible(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: trailing!,
+                        ),
+                      ),
                     if (_isTappable && arrow) ...[
-                      if (trailing != null) const SizedBox(width: 4),
+                      if (hintWidget != null || trailing != null)
+                        const SizedBox(width: 4),
                       Icon(
                         Icons.chevron_right,
                         size: 20,
@@ -115,9 +158,7 @@ class BlockBtn extends StatelessWidget {
             if (showDivider)
               Divider(
                 height: 0.8,
-                // 占用 1 像素高度
                 thickness: 0.8,
-                // 线条本身粗细
                 indent: indent,
                 endIndent: endIndent,
               ),
