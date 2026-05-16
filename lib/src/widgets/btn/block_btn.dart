@@ -26,6 +26,9 @@ class BlockBtn extends StatelessWidget {
   final double endIndent;
   final BlockBtnHintPosition hintPosition;
 
+  /// 标题最大显示字数，超出截断显示省略号。默认 5。
+  final int maxTitleLength;
+
   const BlockBtn({
     super.key,
     required this.title,
@@ -43,6 +46,7 @@ class BlockBtn extends StatelessWidget {
     this.indent = 16.0,
     this.endIndent = 16.0,
     this.hintPosition = BlockBtnHintPosition.below,
+    this.maxTitleLength = 5,
   });
 
   bool get _isTappable => onTap != null && !disabled;
@@ -50,6 +54,15 @@ class BlockBtn extends StatelessWidget {
   /// 存在 trailing 时，hintPosition 不生效，hint 始终在标题底部
   bool get _showHintAsTrailing =>
       hintPosition == BlockBtnHintPosition.trailing && trailing == null;
+
+  /// 右侧是否有展开内容（hint trailing / 自定义 trailing）
+  bool get _hasExpandedTrailing =>
+      _showHintAsTrailing || trailing != null;
+
+  String get _displayTitle {
+    if (maxTitleLength <= 0 || title.length <= maxTitleLength) return title;
+    return '${title.substring(0, maxTitleLength)}...';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,17 +75,55 @@ class BlockBtn extends StatelessWidget {
 
     final bgColor = backgroundColor ?? colorScheme.surfaceContainer;
 
-    // 构建 hint Text Widget
-    Widget? hintWidget;
-    if (hasHint && _showHintAsTrailing) {
-      hintWidget = Text(
-        hint!,
-        style: textTheme.labelSmall?.copyWith(
-          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
-        ),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
-      );
+    // 标题文字区
+    final titleColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (hasTitle)
+          Text(
+            _displayTitle,
+            style: textTheme.bodyMedium?.copyWith(
+              color: disabled ? colorScheme.outline : null,
+            ),
+          ),
+        if (hasTitle && hasHint && !_showHintAsTrailing)
+          const SizedBox(height: 2),
+        if (hasHint && !_showHintAsTrailing)
+          Text(
+            hint!,
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+            ),
+          ),
+      ],
+    );
+
+    // 右侧展开区域内容
+    List<Widget> trailingChildren() {
+      return [
+        if (_showHintAsTrailing && hasHint)
+          Flexible(
+            child: Text(
+              hint!,
+              style: textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        if (trailing != null)
+          Flexible(child: trailing!),
+        if (_isTappable && arrow) ...[
+          if (_hasExpandedTrailing) const SizedBox(width: 4),
+          Icon(
+            Icons.chevron_right,
+            size: 20,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+          ),
+        ],
+      ];
     }
 
     return GestureDetector(
@@ -86,7 +137,6 @@ class BlockBtn extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 主要内容区
             Padding(
               padding: padding,
               child: Row(
@@ -97,64 +147,31 @@ class BlockBtn extends StatelessWidget {
                         Icon(leading, size: 24, color: colorScheme.onSurface),
                     const SizedBox(width: 12),
                   ],
-                  // 中间文字区
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (hasTitle)
-                          Text(
-                            title,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: disabled ? colorScheme.outline : null,
-                            ),
-                          ),
-                        // hint 在标题底部展示
-                        if (hasTitle && hasHint && !_showHintAsTrailing)
-                          const SizedBox(height: 2),
-                        if (hasHint && !_showHintAsTrailing)
-                          Text(
-                            hint!,
-                            style: textTheme.labelSmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant
-                                  .withOpacity(0.7),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  // 后置区域：hint（trailing 模式）+ 自定义 trailing + 箭头
-                  if (hintWidget != null || trailing != null || _isTappable) ...[
+                  // 标题：有右侧展开内容时用自然宽度，否则 Expanded
+                  if (_hasExpandedTrailing)
+                    titleColumn
+                  else
+                    Expanded(child: titleColumn),
+                  // 右侧展开区域
+                  if (_hasExpandedTrailing) ...[
                     const SizedBox(width: 8),
-                    if (hintWidget != null)
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: hintWidget,
-                        ),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: trailingChildren(),
                       ),
-                    if (trailing != null)
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: trailing!,
-                        ),
-                      ),
-                    if (_isTappable && arrow) ...[
-                      if (hintWidget != null || trailing != null)
-                        const SizedBox(width: 4),
-                      Icon(
-                        Icons.chevron_right,
-                        size: 20,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                      ),
-                    ],
+                    ),
+                  ] else if (_isTappable && arrow) ...[
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    ),
                   ],
                 ],
               ),
             ),
-            // 分割线
             if (showDivider)
               Divider(
                 height: 0.8,

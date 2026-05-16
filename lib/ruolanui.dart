@@ -27,6 +27,7 @@ export 'src/mixin/auto_dispose_mixin.dart';
 export 'src/widgets/action_grid.dart';
 // 按钮相关
 export 'src/widgets/btn/block_btn.dart';
+export 'src/widgets/btn/icon_btn.dart';
 export 'src/widgets/btn/error_btn.dart';
 export 'src/widgets/btn/normal_btn.dart';
 export 'src/widgets/btn/primary_btn.dart';
