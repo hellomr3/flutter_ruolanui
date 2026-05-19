@@ -8,8 +8,8 @@ const _kListEditorDebugTag = '[ListEditor]';
 /// 有序列表正则：匹配 "1、" "2、" 等格式（仅行首）
 final _orderedPattern = RegExp(r'^([0-9０-９]+)、');
 
-/// 无序列表正则：匹配 "● " 格式（带空格，仅行首）
-final _unorderedPattern = RegExp(r'^● ');
+/// 无序列表正则：匹配 "• " 格式（带空格，仅行首）
+final _unorderedPattern = RegExp(r'^• ');
 
 /// 行信息（mixin 内部使用）
 class _ListLineInfo {
