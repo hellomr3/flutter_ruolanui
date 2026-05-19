@@ -1,11 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:ruolanui/ruolanui.dart';
 
+/// 默认空选项提示组件
+class DefaultEmptyOptionsWidget extends StatelessWidget {
+  final String text;
+  final IconData icon;
+
+  const DefaultEmptyOptionsWidget({
+    super.key,
+    this.text = "暂无可选项",
+    this.icon = Icons.inbox_outlined,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 48, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4)),
+        const SizedBox(height: 12),
+        Text(
+          text,
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// 大量选项弹窗 — 使用 Wrap 自动换行布局
 ///
 /// 支持泛型数据 [T]，通过 [itemBuilder] 自定义每个选项的渲染。
 /// 高度自适应内容，最高不超过屏幕的 0.85，超出时中间区域可滚动，
-/// 底部展示取消和确认按钮。
+/// 底部展示取消和确认按钮（固定在弹窗底部）。
+///
+/// 多选模式下选项从左上角开始展示（左对齐）。
+/// 当选项为空时展示空提示组件（可自定义，默认提供 [DefaultEmptyOptionsWidget]）。
 class WrapOptionsDialog<T> extends StatefulWidget {
   /// 弹窗标题
   final String title;
@@ -46,8 +81,12 @@ class WrapOptionsDialog<T> extends StatefulWidget {
   /// 取消按钮回调，默认关闭弹窗
   final VoidCallback? onCancel;
 
-  /// 选项为空时展示的组件
+  /// 选项为空时展示的自定义组件
+  /// 为 null 时使用默认的 [DefaultEmptyOptionsWidget]
   final Widget? emptyWidget;
+
+  /// 选项对齐方式，多选模式下默认右对齐（从右上角开始展示）
+  final WrapAlignment? alignment;
 
   const WrapOptionsDialog({
     super.key,
@@ -63,6 +102,7 @@ class WrapOptionsDialog<T> extends StatefulWidget {
     this.cancelText = "取消",
     this.onCancel,
     this.emptyWidget,
+    this.alignment,
   });
 
   @override
@@ -93,6 +133,11 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
     }
   }
 
+  WrapAlignment get _resolvedAlignment {
+    if (widget.alignment != null) return widget.alignment!;
+    return WrapAlignment.start;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -104,7 +149,6 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: screenHeight * 0.85,
-          minHeight: screenHeight * 0.6,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -118,36 +162,46 @@ class _WrapOptionsDialogState<T> extends State<WrapOptionsDialog<T>> {
 
             // 中间可滚动区域
             Flexible(
-              child: widget.options.isEmpty && widget.emptyWidget != null
+              child: widget.options.isEmpty
                   ? Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 24),
-                      child: widget.emptyWidget,
+                      child: widget.emptyWidget ??
+                          const DefaultEmptyOptionsWidget(),
                     )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                  : ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: screenHeight * 0.6 - 120,
                       ),
-                      physics: const BouncingScrollPhysics(),
-                      child: Wrap(
-                        spacing: widget.spacing,
-                        runSpacing: widget.runSpacing,
-                        children:
-                            List.generate(widget.options.length, (index) {
-                          final isSelected = _selected.contains(index);
-                          return widget.itemBuilder(
-                            widget.options[index],
-                            index,
-                            isSelected,
-                            () => _toggle(index),
-                          );
-                        }),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        physics: const BouncingScrollPhysics(),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Wrap(
+                            alignment: _resolvedAlignment,
+                            spacing: widget.spacing,
+                            runSpacing: widget.runSpacing,
+                            children:
+                                List.generate(widget.options.length, (index) {
+                              final isSelected = _selected.contains(index);
+                              return widget.itemBuilder(
+                                widget.options[index],
+                                index,
+                                isSelected,
+                                () => _toggle(index),
+                              );
+                            }),
+                          ),
+                        ),
                       ),
                     ),
             ),
 
-            // 底部操作栏（仅多选时展示）
+            // 底部操作栏（仅多选时展示）— 固定在弹窗底部
             if (widget.multiSelect)
               _BottomActions(
                 cancelText: widget.cancelText,

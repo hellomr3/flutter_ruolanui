@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:ruolanui_example/pages/block_btn_page/block_btn_page.dart';
 
+import 'pages/option/option.dart';
+
 void main() {
   runApp(const RuolanUIExampleApp());
 }
@@ -69,7 +71,7 @@ class RuolanUIExampleApp extends StatelessWidget {
           secondaryContainer: const Color(0xFFF2F2F7),
         ),
       ),
-      home: BlockBtnPage(),
+      home: Option(),
     );
   }
 }

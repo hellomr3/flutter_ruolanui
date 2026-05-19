@@ -79,6 +79,8 @@ Future<Result<bool>> showConfirmDialog({
 ///
 /// 返回用户确认时选中的索引集合，取消时返回 failure。
 /// [itemBuilder] 用于自定义每个选项的渲染。
+/// [alignment] 选项对齐方式，默认左对齐（从左上角开始展示）。
+/// [emptyWidget] 选项为空时展示的自定义组件，为 null 时使用默认空提示。
 Future<Result<Set<int>>> showWrapOptionsDialog<T>({
   required BuildContext context,
   required String title,
@@ -99,6 +101,7 @@ Future<Result<Set<int>>> showWrapOptionsDialog<T>({
   String cancelText = "取消",
   VoidCallback? onCancel,
   Widget? emptyWidget,
+  WrapAlignment? alignment,
 }) async {
   final result = await showModalBottomSheet<Result<Set<int>>>(
     context: context,
@@ -118,6 +121,7 @@ Future<Result<Set<int>>> showWrapOptionsDialog<T>({
           cancelText: cancelText,
           onCancel: onCancel,
           emptyWidget: emptyWidget,
+          alignment: alignment,
         ),
   );
 
