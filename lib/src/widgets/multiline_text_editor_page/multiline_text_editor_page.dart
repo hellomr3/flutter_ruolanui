@@ -161,7 +161,7 @@ class MultilineEditorTheme {
 
 /// 长文本编辑页面
 ///
-/// 支持有序列表（1、2、3、）和无序列表（●）功能，
+/// 支持有序列表（1、2、3、）和无序列表（•）功能，
 /// 底部工具栏可切换列表模式，显示字数统计。
 class MultilineTextEditorPage extends StatefulWidget {
   /// 标题

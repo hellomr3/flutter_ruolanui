@@ -26,7 +26,7 @@ class _ListLineInfo {
 
 /// 列表编辑器 Mixin
 ///
-/// 为 TextField 提供有序列表（1、2、3、）和无序列表（●）功能。
+/// 为 TextField 提供有序列表（1、2、3、）和无序列表（•）功能。
 ///
 /// 使用方式：
 /// ```dart
@@ -271,11 +271,11 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
         } else if (_orderedPattern.hasMatch(lineContent)) {
           // 是有序列表，替换为无序列表
           final match = _orderedPattern.firstMatch(lineContent)!;
-          newText = text.replaceRange(lineStart, lineStart + match.end, '● ');
+          newText = text.replaceRange(lineStart, lineStart + match.end, '• ');
           newCursorOffset = selection.baseOffset - match.end + 2;
         } else {
           // 普通文本，添加无序序号
-          newText = text.replaceRange(lineStart, lineStart, '● ');
+          newText = text.replaceRange(lineStart, lineStart, '• ');
           newCursorOffset = selection.baseOffset + 2;
         }
       }
@@ -378,7 +378,7 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
             newLine = line
                 .replaceFirst(_orderedPattern, '')
                 .replaceFirst(_unorderedPattern, '');
-            newLine = '● $newLine';
+            newLine = '• $newLine';
           }
           newLines.add(newLine);
         }
@@ -701,7 +701,7 @@ mixin ListEditorMixin<T extends StatefulWidget> on State<T> {
             return updatedText;
           }
         }
-        prefixToInsert = '● ';
+        prefixToInsert = '• ';
       }
 
       if (prefixToInsert != null && newLineStart <= newText.length) {

@@ -4,7 +4,7 @@ import '../mixin/list_editor_mixin.dart';
 
 /// 列表编辑器组件
 ///
-/// 支持有序列表（1、2、3、）和无序列表（●）功能。
+/// 支持有序列表（1、2、3、）和无序列表（•）功能。
 class ListEditorWidget extends StatefulWidget {
   /// 初始文本
   final String text;
